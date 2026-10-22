@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrar</title>
+<style>
+  /* PASSO 1 - Visual: variáveis de cor no topo para você trocar o tema fácil */
+  :root {
+    --bg: #f1f4f6; --card: #ffffff; --ink: #15202a; --muted: #5a6978;
+    --line: #cbd4dc; --accent: #0b7a75; --accent-ink: #ffffff; --danger: #b3261e; --ok: #1b7a3a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px;
+    background: var(--bg); color: var(--ink);
+    font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .card {
+    width: 100%; max-width: 400px; background: var(--card);
+    border: 1px solid var(--line); border-radius: 14px; padding: 28px 24px;
+    box-shadow: 0 8px 28px rgba(21,32,42,.10);
+  }
+  h1 { margin: 0 0 4px; font-size: 24px; }
+  .sub { margin: 0 0 20px; color: var(--muted); font-size: 14px; }
+  label { display: block; margin-bottom: 14px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  input {
+    width: 100%; margin-top: 5px; padding: 11px 12px; font: inherit; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  }
+  input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  button {
+    width: 100%; padding: 12px; font: inherit; font-weight: 600; cursor: pointer;
+    border-radius: 8px; border: 1px solid var(--accent);
+    background: var(--accent); color: var(--accent-ink);
+  }
+  button:disabled { opacity: .6; cursor: default; }
+  button.link {
+    background: none; border: none; color: var(--accent); width: auto; padding: 0; text-decoration: underline;
+  }
+  .switch { margin: 18px 0 0; text-align: center; font-size: 14px; color: var(--muted); }
+  .msg { min-height: 20px; margin: 0 0 12px; font-size: 14px; }
+  .msg.erro { color: var(--danger); }
+  .msg.ok { color: var(--ok); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<main class="card">
+
+  <!-- PASSO 2 - Tela de LOGIN (aparece primeiro) -->
+  <section id="tela-login">
+    <h1>Entrar</h1>
+    <p class="sub">Acesse sua conta para continuar.</p>
+
+    <form id="form-login" novalidate>
+      <label>E-mail
+        <input type="email" id="login-email" autocomplete="email" required>
+      </label>
+      <label>Senha
+        <input type="password" id="login-senha" autocomplete="current-password" required>
+      </label>
+      <p class="msg" id="msg-login" role="alert"></p>
+      <button type="submit" id="btn-login">Entrar</button>
+    </form>
+
+    <p class="switch">Não tem conta? <button class="link" type="button" id="ir-cadastro">Cadastre-se</button></p>
+  </section>
+
+  <!-- PASSO 3 - Tela de CADASTRO (começa escondida) -->
+  <section id="tela-cadastro" hidden>
+    <h1>Criar conta</h1>
+    <p class="sub">Preencha seus dados para se cadastrar.</p>
+
+    <form id="form-cadastro" novalidate>
+      <label>Nome completo
+        <input type="text" id="cad-nome" autocomplete="name" required>
+      </label>
+      <label>Telefone
+        <input type="tel" id="cad-telefone" autocomplete="tel" inputmode="numeric" placeholder="(31) 91234-5678" required>
+      </label>
+      <label>E-mail
+        <input type="email" id="cad-email" autocomplete="email" required>
+      </label>
+      <label>Senha
+        <input type="password" id="cad-senha" autocomplete="new-password" minlength="8" required>
+      </label>
+      <label>Confirmar senha
+        <input type="password" id="cad-senha2" autocomplete="new-password" minlength="8" required>
+      </label>
+      <p class="msg" id="msg-cadastro" role="alert"></p>
+      <button type="submit" id="btn-cadastro">Cadastrar</button>
+    </form>
+
+    <p class="switch">Já tem conta? <button class="link" type="button" id="ir-login">Entrar</button></p>
+  </section>
+
+</main>
+
+<script>
+/* =========================================================
+   PASSO 4 - Endereços do servidor
+   O navegador NUNCA fala direto com o MySQL (isso exporia a senha do banco).
+   O caminho certo é: página -> seu servidor (PHP, Node...) -> MySQL.
+   Quando o servidor estiver pronto, ajuste só estas duas linhas.
+   ========================================================= */
+const API_LOGIN    = 'login.php';       // sem "/" no começo: procura na mesma pasta desta página
+const API_CADASTRO = 'cadastro.php';
+const PAGINA_APOS_LOGIN = 'painel.php';  // para onde ir depois de entrar
+
+const $ = (id) => document.getElementById(id);
+
+/* PASSO 5 - Alternar entre as telas (só mostra uma e esconde a outra) */
+function mostrar(tela) {
+  $('tela-login').hidden    = tela !== 'login';
+  $('tela-cadastro').hidden = tela !== 'cadastro';
+  $('msg-login').textContent = '';
+  $('msg-cadastro').textContent = '';
+}
+$('ir-cadastro').onclick = () => mostrar('cadastro');
+$('ir-login').onclick    = () => mostrar('login');
+
+/* PASSO 6 - Máscara do telefone: vai formatando enquanto digita */
+$('cad-telefone').addEventListener('input', (e) => {
+  let d = e.target.value.replace(/\D/g, '').slice(0, 11);        // só números, no máximo 11
+  if (d.length > 6)      d = `(${d.slice(0,2)}) ${d.slice(2, d.length > 10 ? 7 : 6)}-${d.slice(d.length > 10 ? 7 : 6)}`;
+  else if (d.length > 2) d = `(${d.slice(0,2)}) ${d.slice(2)}`;
+  else if (d.length > 0) d = `(${d}`;
+  e.target.value = d;
+});
+
+/* PASSO 7 - Função que envia os dados ao servidor em JSON.
+   Espera uma resposta assim: { "ok": true } ou { "ok": false, "message": "motivo" } */
+async function enviar(url, dados) {
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',                 // permite o servidor criar o cookie de sessão
+    body: JSON.stringify(dados)
+  });
+  let json = {};
+  try { json = await resp.json(); } catch (_) {}
+  // O PHP devolve o motivo do erro em "erro"; a página lê em "message". Aqui juntamos os dois.
+  if (json.erro && !json.message) json.message = json.erro;
+  if (!resp.ok && !json.message) json.message = 'Erro no servidor (' + resp.status + ').';
+  if (resp.ok && json.ok === undefined) json.ok = true;
+  return json;
+}
+
+/* Mostra mensagem de erro (vermelha) ou sucesso (verde) */
+function aviso(id, texto, tipo) {
+  const el = $(id);
+  el.textContent = texto;
+  el.className = 'msg ' + (tipo || '');
+}
+
+/* PASSO 8 - Enviar o LOGIN */
+$('form-login').addEventListener('submit', async (e) => {
+  e.preventDefault();                           // impede a página de recarregar
+  const email = $('login-email').value.trim();
+  const senha = $('login-senha').value;
+
+  if (!email || !senha) return aviso('msg-login', 'Preencha e-mail e senha.', 'erro');
+
+  $('btn-login').disabled = true;
+  aviso('msg-login', 'Entrando…');
+  try {
+    const r = await enviar(API_LOGIN, { email, senha });
+    if (r.ok) window.location.href = r.redirect || PAGINA_APOS_LOGIN;
+    else aviso('msg-login', r.message || 'E-mail ou senha incorretos.', 'erro');
+  } catch (_) {
+    aviso('msg-login', 'Não foi possível conectar ao servidor.', 'erro');
+  }
+  $('btn-login').disabled = false;
+});
+
+/* PASSO 9 - Enviar o CADASTRO, com as validações no navegador.
+   Importante: o servidor também precisa validar tudo de novo (o navegador pode ser burlado). */
+$('form-cadastro').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const nome     = $('cad-nome').value.trim().replace(/\s+/g, ' ');
+  const telefone = $('cad-telefone').value.trim();
+  const email    = $('cad-email').value.trim();
+  const senha    = $('cad-senha').value;
+  const senha2   = $('cad-senha2').value;
+
+  if (nome.split(' ').length < 2)                  return aviso('msg-cadastro', 'Digite o nome completo (nome e sobrenome).', 'erro');
+  if (telefone.replace(/\D/g, '').length < 10)     return aviso('msg-cadastro', 'Telefone inválido. Inclua o DDD.', 'erro');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))   return aviso('msg-cadastro', 'E-mail inválido.', 'erro');
+  if (senha.length < 8)                            return aviso('msg-cadastro', 'A senha precisa ter pelo menos 8 caracteres.', 'erro');
+  if (senha !== senha2)                            return aviso('msg-cadastro', 'As senhas não são iguais.', 'erro');
+
+  $('btn-cadastro').disabled = true;
+  aviso('msg-cadastro', 'Criando conta…');
+  try {
+    // Não enviamos "senha2": ela só serve para conferir aqui no navegador
+    const r = await enviar(API_CADASTRO, { nome, telefone, email, senha });
+    if (r.ok) {
+      $('form-cadastro').reset();
+      mostrar('login');
+      aviso('msg-login', 'Conta criada! Agora é só entrar.', 'ok');
+    } else {
+      aviso('msg-cadastro', r.message || 'Não foi possível cadastrar.', 'erro');
+    }
+  } catch (_) {
+    aviso('msg-cadastro', 'Não foi possível conectar ao servidor.', 'erro');
+  }
+  $('btn-cadastro').disabled = false;
+});
+</script>
+</body>
+</html>
