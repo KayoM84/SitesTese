@@ -1,0 +1,2269 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Árvore de Ideias</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Conceito: um quadro de trabalho com grade de pontos; as caixas formam uma árvore da esquerda para a direita,
+   e cada linha carrega o nome da relação entre a caixa-mãe e a caixa-filha. */
+:root {
+  --bg: #f1f4f6;
+  --panel: #ffffff;
+  --ink: #15202a;
+  --muted: #5a6978;
+  --line: #cbd4dc;
+  --grid: #d3dbe2;
+  --edge: #8d9eae;
+  --accent: #0b7a75;
+  --accent-ink: #ffffff;
+  --danger: #b3261e;
+  --shadow: 0 6px 24px rgba(21, 32, 42, .14);
+  /* cores das caixas: fundo (b) e borda (d) */
+  --c0b: #ffffff; --c0d: #b5c1cc;
+  --c1b: #dcf2ef; --c1d: #74c0b9;
+  --c2b: #faeecf; --c2d: #dfb454;
+  --c3b: #fbdfe3; --c3d: #e3939f;
+  --c4b: #e3e7fb; --c4d: #939ee0;
+  --sky1: #d8eaf2; --sky2: #f2f8fa; --bark: #7b5b3e; --leaf: #4c9759; --leaf2: #7dbf6c; --ground: #b3a78f; --ground2: #8e8068;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1418; --panel: #172027; --ink: #e5ecf1; --muted: #92a2b0; --line: #2f3f4b;
+    --grid: #1f2b34; --edge: #4d6272; --accent: #4fd1c5; --accent-ink: #072523; --danger: #ff8a80;
+    --shadow: 0 6px 24px rgba(0, 0, 0, .5);
+    --c0b: #1c2830; --c0d: #3b4c59;
+    --c1b: #11373a; --c1d: #2a7b78;
+    --c2b: #3a2f12; --c2d: #8b6b20;
+    --c3b: #3c1d24; --c3d: #8e4455;
+    --c4b: #222747; --c4d: #4f5ba9; --sky1: #0c161c; --sky2: #162a33; --bark: #a07b55; --leaf: #38875a; --leaf2: #5db37b; --ground: #2e4233; --ground2: #243529;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1418; --panel: #172027; --ink: #e5ecf1; --muted: #92a2b0; --line: #2f3f4b;
+  --grid: #1f2b34; --edge: #4d6272; --accent: #4fd1c5; --accent-ink: #072523; --danger: #ff8a80;
+  --shadow: 0 6px 24px rgba(0, 0, 0, .5);
+  --c0b: #1c2830; --c0d: #3b4c59;
+  --c1b: #11373a; --c1d: #2a7b78;
+  --c2b: #3a2f12; --c2d: #8b6b20;
+  --c3b: #3c1d24; --c3d: #8e4455;
+  --c4b: #222747; --c4d: #4f5ba9; --sky1: #0c161c; --sky2: #162a33; --bark: #a07b55; --leaf: #38875a; --leaf2: #5db37b; --ground: #2e4233; --ground2: #243529;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-block: 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- barra superior ---------- */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.bar h1 { font: 700 20px/1 var(--f-display); margin: 0 auto 0 0; letter-spacing: -.01em; }
+.status { color: var(--muted); font-size: 12px; font-family: var(--f-mono); min-width: 0; }
+.btn {
+  border: 1px solid var(--line); background: var(--panel); border-radius: 8px;
+  padding: 7px 12px; font-weight: 500;
+}
+.btn:hover { border-color: var(--edge); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn.danger { color: var(--danger); }
+.btn.danger.armed { background: var(--danger); border-color: var(--danger); color: var(--panel); }
+.btn[disabled] { opacity: .45; cursor: default; }
+
+/* ---------- quadro ---------- */
+.canvas {
+  position: relative; flex: 1; min-height: 0; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 12px; background-color: var(--panel);
+  background-image: radial-gradient(var(--grid) 1.2px, transparent 1.3px);
+  background-size: 24px 24px;
+  touch-action: none; cursor: grab;
+}
+.canvas.panning { cursor: grabbing; }
+.world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+#edges { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+#edges path { fill: none; stroke: var(--edge); stroke-width: 1.8; }
+#layer { position: absolute; left: 0; top: 0; }
+
+.node {
+  position: absolute; left: 0; top: 0; width: 190px; height: 64px;
+  border-radius: 8px; border: 1.5px solid var(--c0d); background: var(--c0b);
+  padding: 9px 12px; cursor: pointer; user-select: none;
+}
+.node.c1 { background: var(--c1b); border-color: var(--c1d); }
+.node.c2 { background: var(--c2b); border-color: var(--c2d); }
+.node.c3 { background: var(--c3b); border-color: var(--c3d); }
+.node.c4 { background: var(--c4b); border-color: var(--c4d); }
+.node.sel { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+.node .t { padding-right: 14px; font: 600 14px/1.25 var(--f-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.node .n { margin-top: 3px; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.node .tog, .node .add {
+  position: absolute; width: 22px; height: 22px; border-radius: 11px; padding: 0;
+  border: 1.5px solid var(--edge); background: var(--panel); font-size: 13px; line-height: 1;
+  display: grid; place-items: center; font-family: var(--f-mono);
+}
+.node .tog { right: -12px; top: 50%; transform: translateY(-50%); width: auto; min-width: 22px; padding: 0 5px; }
+.node .add { left: 50%; bottom: -12px; transform: translateX(-50%); background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-size: 16px; }
+.rel {
+  position: absolute; left: 0; top: 0; max-width: 96px; padding: 2px 6px; border-radius: 6px;
+  font: 500 11px/1.3 var(--f-mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+}
+.rel:hover { color: var(--ink); border-color: var(--edge); }
+
+.zoombar { position: absolute; left: 10px; top: 10px; display: flex; gap: 6px; z-index: 3; }
+.zoombar .btn { padding: 5px 10px; min-width: 34px; }
+.hint {
+  position: absolute; left: 12px; bottom: 10px; right: 12px; color: var(--muted); font-size: 12px;
+  pointer-events: none; z-index: 2;
+}
+kbd { font: 500 11px var(--f-mono); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; background: var(--bg); }
+
+/* ---------- página de edição de cada caixa ---------- */
+body.in-page .bar, body.in-page .canvas { display: none; }
+.page { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+.pbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: 0; font-size: 13px; color: var(--muted); margin-right: auto; }
+.crumbs button { border: none; background: none; padding: 2px 4px; color: var(--muted); border-radius: 4px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crumbs button:hover { color: var(--ink); background: var(--bg); }
+.crumbs .cur { color: var(--ink); font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pscroll { flex: 1; min-height: 0; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+.sheet { max-width: 780px; margin: 0 auto; padding: 28px 24px 56px; display: flex; flex-direction: column; gap: 14px; }
+.ptitle {
+  width: 100%; border: none; border-bottom: 2px solid transparent; background: transparent; outline: none;
+  font: 700 32px/1.15 var(--f-display); letter-spacing: -.015em; padding: 2px 0 6px; color: var(--ink);
+}
+.ptitle:focus { border-bottom-color: var(--accent); }
+.ptitle::placeholder { color: var(--muted); }
+.pmeta { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-end; }
+.pmeta label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); font-weight: 500; min-width: 0; flex: 1 1 200px; }
+.pmeta input[type="text"] {
+  width: 100%; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); padding: 7px 9px; font-size: 14px; color: var(--ink);
+}
+.pmeta input:disabled { opacity: .5; }
+.swatches { display: flex; gap: 8px; padding-bottom: 2px; }
+.sw { width: 28px; height: 28px; border-radius: 8px; border: 1.5px solid; padding: 0; }
+.sw[aria-pressed="true"] { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+.sw.c0 { background: var(--c0b); border-color: var(--c0d); }
+.sw.c1 { background: var(--c1b); border-color: var(--c1d); }
+.sw.c2 { background: var(--c2b); border-color: var(--c2d); }
+.sw.c3 { background: var(--c3b); border-color: var(--c3d); }
+.sw.c4 { background: var(--c4b); border-color: var(--c4d); }
+.ptools {
+  position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 4px; padding: 6px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+}
+.ptools button {
+  border: 1px solid transparent; background: transparent; border-radius: 6px; padding: 5px 9px;
+  font-size: 13px; font-weight: 600; min-width: 32px;
+}
+.ptools button:hover { background: var(--bg); border-color: var(--line); }
+.ptools .sep { width: 1px; background: var(--line); margin: 3px 4px; }
+.editor { min-height: 320px; outline: none; font-size: 16px; line-height: 1.65; overflow-wrap: anywhere; }
+.editor:empty::before { content: attr(data-ph); color: var(--muted); pointer-events: none; }
+.editor p, .editor div { margin: 0 0 .7em; }
+.editor h2 { font: 700 24px/1.25 var(--f-display); margin: 1.1em 0 .4em; }
+.editor h3 { font: 600 19px/1.3 var(--f-display); margin: 1em 0 .35em; }
+.editor ul, .editor ol { margin: 0 0 .8em; padding-left: 1.5em; }
+.editor blockquote { margin: .8em 0; padding: 2px 0 2px 14px; border-left: 3px solid var(--edge); color: var(--muted); }
+.editor hr { border: none; border-top: 1px solid var(--line); margin: 1.2em 0; }
+.editor a { color: var(--accent); }
+.editor img { display: block; max-width: 100%; height: auto; border-radius: 8px; margin: 12px 0; cursor: pointer; }
+.editor img[data-w="s"] { width: 30%; }
+.editor img[data-w="m"] { width: 60%; }
+.editor img[data-w="l"] { width: 100%; }
+.editor img.sel { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+.imgbar {
+  position: fixed; z-index: 20; display: flex; gap: 4px; padding: 4px; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+}
+.imgbar[hidden], .page[hidden] { display: none; }
+.imgbar button { border: none; background: transparent; border-radius: 6px; padding: 5px 9px; font-size: 13px; font-weight: 600; }
+.imgbar button:hover { background: var(--bg); }
+.imgbar .danger { color: var(--danger); }
+.pact { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 18px; border-top: 1px solid var(--line); margin-top: 8px; }
+.pgi { position: absolute; right: 8px; top: 8px; width: 12px; height: 14px; color: var(--muted); }
+
+
+/* ---------- abas e árvore viva ---------- */
+.tabs { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.tabs button { border: none; background: transparent; padding: 6px 12px; border-radius: 7px; font-weight: 600; font-size: 13px; color: var(--muted); }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.garden { display: none; background-image: linear-gradient(var(--sky1), var(--sky2)); background-size: auto; }
+body.tab-garden .garden { display: block; }
+body.tab-garden #canvas { display: none; }
+body.in-page .garden { display: none; }
+#gsvg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.gempty { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); max-width: 280px; text-align: center; color: var(--muted); }
+.gempty[hidden] { display: none; }
+.br { fill: none; stroke: var(--bark); stroke-linecap: round; }
+.trunk { fill: var(--bark); }
+.gr { fill: var(--ground); opacity: .7; }
+.gr2 { fill: var(--ground2); opacity: .55; }
+.lf { fill: var(--leaf); }
+.lf2 { fill: var(--leaf2); }
+.stem { fill: none; stroke: var(--bark); stroke-width: 2; stroke-linecap: round; }
+.fruit { cursor: pointer; }
+.fr { stroke-width: 1.8; }
+.fr.c0 { fill: var(--c0b); stroke: var(--c0d); }
+.fr.c1 { fill: var(--c1b); stroke: var(--c1d); }
+.fr.c2 { fill: var(--c2b); stroke: var(--c2d); }
+.fr.c3 { fill: var(--c3b); stroke: var(--c3d); }
+.fr.c4 { fill: var(--c4b); stroke: var(--c4d); }
+.fruit:hover .fr { stroke-width: 2.8; }
+.fruit.sel .fr { stroke: var(--accent); stroke-width: 3.4; }
+.ft { font: 600 12.5px var(--f-display); fill: var(--ink); pointer-events: none; }
+.gtog circle { fill: var(--panel); stroke: var(--edge); stroke-width: 1.5; }
+.gtog text { font: 500 11px var(--f-mono); fill: var(--ink); pointer-events: none; }
+.grow { stroke-dasharray: var(--L); animation: grow .9s ease-out var(--d, 0s) both; }
+.fade { animation: fadein .5s ease-out var(--d, 0s) both; }
+.fi.pop { transform-box: fill-box; transform-origin: center; animation: pop .55s cubic-bezier(.3, 1.5, .5, 1) var(--d, 0s) both; }
+.trunk.rise { transform-box: fill-box; transform-origin: 50% 100%; animation: rise .8s ease-out both; }
+@keyframes grow { from { stroke-dashoffset: var(--L); } to { stroke-dashoffset: 0; } }
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { from { opacity: 0; transform: scale(.2); } to { opacity: 1; transform: scale(1); } }
+@keyframes rise { from { transform: scaleY(.05); } to { transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) { .grow, .fade, .fi.pop, .trunk.rise { animation: none !important; } }
+
+
+/* ---------- menu lateral ---------- */
+.shell { flex: 1; min-height: 0; display: flex; gap: 10px; }
+.main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+.side {
+  width: 288px; flex: none; overflow-y: auto; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 4px; align-self: stretch;
+}
+.sitem {
+  display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left;
+  border: 1px solid transparent; background: transparent; border-radius: 8px; padding: 10px 11px; font-weight: 600;
+}
+.sitem:hover { background: var(--bg); }
+.sitem[aria-expanded="true"] { background: var(--bg); border-color: var(--line); }
+.sitem .chev { color: var(--muted); transition: transform .15s; }
+.sitem[aria-expanded="true"] .chev { transform: rotate(90deg); }
+.spanel { display: flex; flex-direction: column; gap: 10px; padding: 8px 4px 14px; font-size: 13px; }
+.spanel[hidden] { display: none; }
+.muted { color: var(--muted); }
+.spanel p { margin: 0; }
+.fld { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); font-weight: 500; }
+.side input[type="text"], .side textarea {
+  width: 100%; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); padding: 7px 9px; font-size: 14px; color: var(--ink);
+}
+.side textarea { resize: vertical; font-family: var(--f-mono); font-size: 12px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.row[hidden] { display: none; }
+.side hr { border: none; border-top: 1px solid var(--line); width: 100%; margin: 4px 0; }
+.ucard { display: flex; align-items: center; gap: 12px; }
+.uav { width: 44px; height: 44px; border-radius: 22px; flex: none; overflow: hidden; display: grid; place-items: center; background: var(--c1b); border: 1.5px solid var(--c1d); font: 700 18px var(--f-display); }
+.uav img { width: 44px; height: 44px; object-fit: cover; display: block; }
+.uav img[hidden], .uav span[hidden] { display: none; }
+.umeta { display: flex; flex-direction: column; min-width: 0; }
+.umeta strong { font: 700 15px var(--f-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.llist, .plist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.llist li { display: flex; align-items: stretch; gap: 4px; }
+.llist a {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; padding: 7px 10px; border: 1px solid var(--line);
+  border-radius: 8px; text-decoration: none; color: var(--ink); background: var(--bg);
+}
+.llist a:hover { border-color: var(--accent); }
+.llist a strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.llist a span { font: 400 11px var(--f-mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mini { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 0 9px; font-size: 12px; font-weight: 500; }
+.mini:hover { border-color: var(--edge); }
+.mini.danger { color: var(--danger); font-size: 16px; padding: 0 9px; }
+.lform { display: flex; flex-direction: column; gap: 8px; }
+.lmsg { overflow-wrap: anywhere; user-select: all; }
+.plist li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.plist li strong { font-weight: 600; text-align: right; }
+.pill { font: 500 11px var(--f-mono); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--muted); }
+.pill.granted { background: var(--c1b); border-color: var(--c1d); color: var(--ink); }
+.pill.denied { background: var(--c3b); border-color: var(--c3d); color: var(--ink); }
+.pill.prompt { background: var(--c2b); border-color: var(--c2d); color: var(--ink); }
+.modes { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px 8px; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.modes legend { font-size: 12px; color: var(--muted); padding: 0 4px; }
+.modes label { display: flex; align-items: center; gap: 8px; }
+.isum.bad { color: var(--danger); }
+.fname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
+.scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, .38); z-index: 29; }
+.scrim[hidden] { display: none; }
+body.in-page .side { display: none; }
+@media (min-width: 641px) {
+  body.side-closed .side { display: none; }
+  .scrim { display: none; }
+}
+@media (max-width: 640px) {
+  .side {
+    position: fixed; left: 0; top: 0; bottom: 0; width: min(88vw, 320px); z-index: 30; border-radius: 0 12px 12px 0;
+    padding-top: max(10px, env(safe-area-inset-top, 0px)); padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    transform: translateX(-104%); transition: transform .2s ease; box-shadow: var(--shadow);
+  }
+  body.side-open .side { transform: none; }
+}
+
+@media (max-width: 640px) {
+  .sheet { padding: 18px 14px 40px; }
+  .ptitle { font-size: 26px; }
+  .hint { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ---------- galeria: estante e livro ---------- */
+:root{--paper:#fdf9ef;--ink2:#2a2418;--pmute:#6f6550;--wall:#e9e1d2;--wood:#a9825a;--wood2:#8a6644;--bt0:#3f5468;--bt1:#0b7a75;--bt2:#8f6414;--bt3:#a8404f;--bt4:#4b55a8;--f-read:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#2b2823;--ink2:#ece6d8;--pmute:#a99f8a;--wall:#1b1814;--wood:#6b5238;--wood2:#523d29}}
+:root[data-theme="dark"]{--paper:#2b2823;--ink2:#ece6d8;--pmute:#a99f8a;--wall:#1b1814;--wood:#6b5238;--wood2:#523d29}
+body.in-gallery .bar,body.in-gallery .canvas,body.in-gallery .garden,body.in-gallery .page,body.in-gallery .side{display:none}
+.glist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.gl-item{width:100%;display:flex;flex-direction:column;gap:1px;text-align:left;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.gl-item:hover{border-color:var(--accent)}
+.gl-item strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gl-item span{font:400 11px var(--f-mono);color:var(--muted)}
+.gallery{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+.gbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.gbar h2{font:700 20px/1 var(--f-display);margin:0 auto 0 0}
+.bk-title{flex:1 1 200px;min-width:0;border:none;border-bottom:2px solid transparent;background:transparent;outline:none;font:700 22px/1.2 var(--f-display);color:var(--ink);padding:2px 0 4px}
+.bk-title:focus{border-bottom-color:var(--accent)}
+.shelfview{flex:1;min-height:0;overflow-y:auto;border:1px solid var(--line);border-radius:12px;background:var(--wall);padding:22px 14px 28px}
+.shelf{margin-bottom:26px}
+.shelf-books{display:flex;align-items:flex-end;gap:14px;padding:0 14px;min-height:190px}
+.plank{height:14px;border-radius:2px;background:linear-gradient(var(--wood),var(--wood2));box-shadow:0 9px 14px -6px rgba(0,0,0,.4)}
+.bk{--h:170px;width:112px;height:var(--h);flex:none;border:none;border-radius:3px 7px 7px 3px;padding:14px 10px 12px 22px;text-align:left;color:#fff;background:var(--bt);
+  display:flex;flex-direction:column;justify-content:space-between;box-shadow:inset 8px 0 0 rgba(0,0,0,.22),inset 10px 0 0 rgba(255,255,255,.08),2px 3px 8px rgba(0,0,0,.3);transition:transform .15s}
+.bk:hover{transform:translateY(-6px)}
+.bk strong{font:700 15px/1.2 var(--f-display);overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.bk span{font:400 11px var(--f-mono);opacity:.9}
+.bk.new{background:transparent;color:var(--muted);border:2px dashed var(--edge);box-shadow:none;align-items:center;justify-content:center;gap:6px;padding:10px;text-align:center}
+.bk.new .plus{font:400 34px/1 var(--f-display);opacity:1}
+.bk.new strong{font-size:13px}
+.t0{--bt:var(--bt0)}.t1{--bt:var(--bt1)}.t2{--bt:var(--bt2)}.t3{--bt:var(--bt3)}.t4{--bt:var(--bt4)}
+.reader{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid var(--line);border-radius:12px;background:var(--wall);padding:24px 12px;overflow:hidden}
+.reader[hidden],.shelfview[hidden]{display:none}
+.turn{flex:none;width:40px;height:64px;border:1px solid var(--line);background:var(--panel);border-radius:10px;font-size:26px;line-height:1}
+.turn[disabled]{opacity:.35;cursor:default}
+.bookwrap{flex:1;min-width:0;height:100%;max-height:640px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.bookwrap.opening{animation:bkopen .35s ease-out}
+@keyframes bkopen{from{opacity:0;transform:translateY(16px) scale(.92)}to{opacity:1;transform:none}}
+.open-book{position:relative;width:100%;max-width:940px;flex:1;min-height:0;display:flex;perspective:2400px}
+.open-book::before{content:"";position:absolute;inset:-9px -10px;background:var(--bt);border-radius:8px;box-shadow:0 12px 30px rgba(0,0,0,.3)}
+.half,.face{position:relative;flex:1;min-width:0;background:var(--paper);padding:30px 34px 46px;box-sizing:border-box;z-index:1}
+.face{position:absolute;inset:0;overflow:hidden;backface-visibility:hidden}
+.face.back{transform:rotateY(180deg)}
+.half.l,.face.l{border-radius:6px 0 0 6px;box-shadow:inset -22px 0 24px -22px rgba(0,0,0,.3)}
+.half.r,.face.r{border-radius:0 6px 6px 0;box-shadow:inset 22px 0 24px -22px rgba(0,0,0,.3)}
+.open-book.single .half.l,.leaf.single .face{border-radius:6px;box-shadow:none}
+.pg,.ftxt{font:17px/1.7 var(--f-read);color:var(--ink2);white-space:pre-wrap;overflow-wrap:break-word}
+.pg{display:block;width:100%;height:100%;margin:0;padding:0;border:0;resize:none;overflow:hidden;background:transparent;outline:none}
+.pg::placeholder{color:var(--pmute)}
+.ftxt{height:100%;overflow:hidden}
+.pg.measure{position:absolute;left:-9999px;top:0;visibility:hidden;pointer-events:none}
+.pgno{position:absolute;left:0;right:0;bottom:16px;text-align:center;font:400 11px var(--f-mono);color:var(--pmute)}
+.leaf{position:absolute;top:0;bottom:0;z-index:6;transform-style:preserve-3d;transition:transform .85s cubic-bezier(.45,.05,.25,1);pointer-events:none}
+.leaf.fwd{left:50%;width:50%;transform-origin:left center}
+.leaf.bwd{left:0;width:50%;transform-origin:right center}
+.leaf.single{left:0;width:100%}
+.leaf.fwd.go{transform:rotateY(-180deg)}
+.leaf.bwd.go{transform:rotateY(180deg)}
+.face.front::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(0,0,0,.2));opacity:0;transition:opacity .85s}
+.leaf.go .face.front::after{opacity:1}
+.gpos{font:400 12px var(--f-mono);color:var(--muted)}
+@media (max-width:759px){.half,.face{padding:22px 20px 40px}.turn{width:32px}}
+@media (prefers-reduced-motion:reduce){.bookwrap.opening{animation:none}}
+
+/* ---------- publicações e personalização ---------- */
+body.in-pub .bar,body.in-pub .canvas,body.in-pub .garden,body.in-pub .page,body.in-pub .side{display:none}
+html{background:var(--bg)}
+#bgfx{position:fixed;inset:-24px;z-index:-1;background-size:cover;background-position:center;--dim:0}
+#bgfx::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,var(--dim))}
+body.has-bg{background:transparent}
+body.has-bg .side,body.has-bg .canvas,body.has-bg .pscroll,body.has-bg .pbody{backdrop-filter:blur(8px)}
+body.side-right .shell{flex-direction:row-reverse}
+.side input[type=range]{width:100%;accent-color:var(--accent)}
+.side input[type=color]{width:100%;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:2px}
+.side select,.pcomp select,.pcomp input{border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:7px 9px;font-size:14px;color:var(--ink)}
+.pbody{flex:1;min-height:0;overflow-y:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:16px}
+.pcol{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.pfeed{display:flex;flex-direction:column;gap:14px}
+.pcard{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:14px;display:flex;flex-direction:column;gap:10px}
+.pcomp{flex-direction:row;flex-wrap:wrap;align-items:center}
+.pcomp input{flex:1 1 180px;min-width:0}.pcomp select{max-width:100%}
+.phead{display:flex;align-items:center;gap:10px}
+.pav{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;font:700 16px var(--f-display);color:#fff;border:none;padding:0}
+.pav.big{width:64px;height:64px;font-size:26px}
+.pwho{border:none;background:none;padding:0;font:700 14px var(--f-display);text-align:left;color:var(--ink)}
+.pwho:hover{text-decoration:underline}
+.pdate{font:400 11px var(--f-mono);color:var(--muted);display:block}
+.phead .rk{margin-left:auto}
+.rk{font:700 13px var(--f-display);padding:3px 11px;border-radius:999px;border:1.5px solid var(--c0d);background:var(--c0b);color:var(--ink)}
+.rk.r1{background:var(--c1b);border-color:var(--c1d)}.rk.r2{background:var(--c2b);border-color:var(--c2d)}.rk.r3{background:var(--c4b);border-color:var(--c4d)}
+.pcard h3{margin:0;font:700 18px/1.25 var(--f-display)}
+.pcard p{margin:0}.pbodytxt{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.55;max-height:260px;overflow:auto}
+.pfoot{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.pfoot .muted{font-size:12px;margin-right:auto}
+.vb{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 11px;font-weight:700;min-width:40px}
+.vb:hover:not([disabled]){border-color:var(--accent)}
+.vb[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.vb[disabled]{opacity:.4;cursor:default}
+.prof{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.prof h2{margin:0;font:700 22px var(--f-display)}
+.ptabs{display:flex;gap:6px}
+.ptabs button{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 14px;font-weight:600}
+.ptabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+details.pcard{border-left:6px solid var(--bt)}details.pcard summary{cursor:pointer;font-weight:600}
+</style>
+<div id="bgfx" aria-hidden="true"></div>
+<div class="scrim" id="scrim" hidden></div>
+<div class="shell">
+<aside class="side" id="side" aria-label="Menu lateral">
+  <button class="sitem" data-sec="user" aria-expanded="false" aria-controls="sec-user">Usuário <span class="chev" aria-hidden="true">›</span></button>
+  <section class="spanel" id="sec-user" hidden>
+    <div class="ucard">
+      <span class="uav"><img id="u-av" alt="" width="44" height="44" hidden><span id="u-ini">V</span></span>
+      <div class="umeta"><strong id="u-name">Visitante</strong><span id="u-role" class="muted"></span></div>
+    </div>
+    <label class="fld" for="u-nick">Como você quer ser chamado aqui<input type="text" id="u-nick" maxlength="30" autocomplete="off" placeholder="Seu apelido"></label>
+    <p class="muted" id="u-where"></p>
+  </section>
+
+  <button class="sitem" data-sec="links" aria-expanded="false" aria-controls="sec-links">Links de sites <span class="chev" aria-hidden="true">›</span></button>
+  <section class="spanel" id="sec-links" hidden>
+    <ul class="llist" id="l-list"></ul>
+    <p class="muted" id="l-empty" hidden>Nenhum link ainda. Adicione o primeiro abaixo.</p>
+    <form id="l-form" class="lform" autocomplete="off">
+      <label class="fld" for="l-title">Nome<input type="text" id="l-title" maxlength="60" placeholder="ex.: Pasta do projeto"></label>
+      <label class="fld" for="l-url">Endereço<input type="text" id="l-url" inputmode="url" placeholder="https://site.com.br" required></label>
+      <button class="btn primary" type="submit">Adicionar link</button>
+    </form>
+    <p class="muted lmsg" id="l-msg"></p>
+    <p class="muted">Clique num link para abrir o site em outra aba. Use Copiar para enviar o endereço a alguém.</p>
+  </section>
+
+  <button class="sitem" data-sec="perm" aria-expanded="false" aria-controls="sec-perm">Permissões <span class="chev" aria-hidden="true">›</span></button>
+  <section class="spanel" id="sec-perm" hidden>
+    <p class="muted">O que esta página pode usar na sua conta:</p>
+    <ul class="plist" id="perm-list"></ul>
+    <div class="row" id="perm-btns">
+      <button class="btn" id="perm-req">Pedir permissões</button>
+      <button class="btn" id="perm-manage">Gerenciar</button>
+    </div>
+    <p class="muted" id="perm-msg"></p>
+    <ul class="plist" id="perm-access"></ul>
+    <p class="muted">Quem pode ver ou editar esta árvore é definido no menu Compartilhar do artefato.</p>
+  </section>
+
+  <button class="sitem" data-sec="imp" aria-expanded="false" aria-controls="sec-imp">Importar e exportar <span class="chev" aria-hidden="true">›</span></button>
+  <section class="spanel" id="sec-imp" hidden>
+    <p class="muted">Importe a base de um colega: um arquivo JSON exportado por esta ferramenta, com caixas, páginas e links.</p>
+    <div class="row"><button class="btn" id="i-pick">Escolher arquivo</button><span class="muted fname" id="i-name"></span></div>
+    <input type="file" id="i-file" accept="application/json,.json" hidden>
+    <label class="fld" for="i-text">Ou cole o JSON aqui<textarea id="i-text" rows="4" spellcheck="false"></textarea></label>
+    <p class="muted isum" id="i-sum" aria-live="polite"></p>
+    <fieldset class="modes">
+      <legend>Como importar</legend>
+      <label><input type="radio" name="imode" value="add" checked> Somar à minha árvore</label>
+      <label><input type="radio" name="imode" value="replace"> Substituir tudo</label>
+    </fieldset>
+    <button class="btn primary" id="i-go" disabled>Importar</button>
+    <hr>
+    <p class="muted">Enviar a sua base para um colega:</p>
+    <div class="row">
+      <button class="btn" id="b-export" hidden>Baixar JSON</button>
+      <button class="btn" id="b-copy">Copiar JSON</button>
+    </div>
+  </section>
+
+  <button class="sitem" data-sec="gal" aria-expanded="false" aria-controls="sec-gal">Galeria <span class="chev" aria-hidden="true">›</span></button>
+  <section class="spanel" id="sec-gal" hidden>
+    <p class="muted">Seus livros ficam numa estante. Abra um e escreva: quando a página enche, ela vira.</p>
+    <ul class="glist" id="g-list"></ul>
+    <p class="muted" id="g-empty" hidden>Nenhum livro ainda.</p>
+    <button class="btn primary" id="g-open">Abrir galeria</button>
+  </section>
+
+  <button class="sitem" data-sec="pubs" aria-expanded="false" aria-controls="sec-pubs">Publicações <span class="chev" aria-hidden="true">›</span></button>
+  <section class="spanel" id="sec-pubs" hidden>
+    <p class="muted">Publique anotações para o seu grupo. Cada pessoa avalia com C, B, A ou S+ e a nota da anotação sobe com a média.</p>
+    <button class="btn primary" id="pb-open">Abrir publicações</button>
+  </section>
+
+  <button class="sitem" data-sec="tema" aria-expanded="false" aria-controls="sec-tema">Personalização <span class="chev" aria-hidden="true">›</span></button>
+  <section class="spanel" id="sec-tema" hidden>
+    <p class="muted">Foto de fundo. Fotos maiores que Full HD são reduzidas para 1920×1080.</p>
+    <div class="row"><button class="btn" id="t-pick">Escolher foto</button><button class="btn" id="t-clear">Remover foto</button></div>
+    <input type="file" id="t-file" accept="image/*" hidden>
+    <label class="fld" for="t-dim">Escurecer o fundo<input type="range" id="t-dim" min="0" max="80"></label>
+    <label class="fld" for="t-blur">Desfocar o fundo<input type="range" id="t-blur" min="0" max="20"></label>
+    <label class="fld" for="t-po">Opacidade dos painéis (com foto)<input type="range" id="t-po" min="50" max="100"></label>
+    <label class="fld" for="t-acc">Cor de destaque<input type="color" id="t-acc" value="#0b7a75"></label>
+    <label class="fld" for="t-side">Lado do menu<select id="t-side"><option value="l">Esquerda</option><option value="r">Direita</option></select></label>
+    <button class="btn" id="t-reset">Restaurar padrão</button>
+    <p class="muted" id="t-msg" aria-live="polite"></p>
+  </section>
+</aside>
+<div class="main">
+<header class="bar">
+  <button class="btn" id="menu-btn" aria-controls="side" aria-expanded="true">☰ Menu</button>
+  <h1>Árvore de Ideias</h1>
+  <div class="tabs" role="tablist" aria-label="Visão">
+    <button role="tab" id="tab-boxes" aria-selected="true">Caixas</button>
+    <button role="tab" id="tab-tree" aria-selected="false">Árvore viva</button>
+  </div>
+  <span class="status" id="status" aria-live="polite"></span>
+  <button class="btn primary" id="b-root">+ Nova caixa raiz</button>
+  <button class="btn danger" id="b-clear">Limpar tudo</button>
+</header>
+
+<main class="canvas boxes" id="canvas">
+  <div class="zoombar">
+    <button class="btn" id="z-out" aria-label="Diminuir zoom">−</button>
+    <button class="btn" id="z-in" aria-label="Aumentar zoom">+</button>
+    <button class="btn" id="z-fit">Ajustar</button>
+  </div>
+  <div class="world" id="world">
+    <svg id="edges" aria-hidden="true"></svg>
+    <div id="layer"></div>
+  </div>
+  <div class="hint" id="hint">Clique numa caixa para abrir a página dela. Arraste o fundo para mover e use a roda do mouse para ampliar.
+    Com uma caixa selecionada: <kbd>A</kbd> cria filha, <kbd>S</kbd> cria irmã, <kbd>Delete</kbd> exclui.</div>
+
+</main>
+
+<section class="canvas garden" id="garden" aria-label="Árvore viva">
+  <svg id="gsvg" role="img" aria-label="Árvore com uma fruta para cada caixa"><g id="gw"></g></svg>
+  <div class="zoombar">
+    <button class="btn" id="gz-out" aria-label="Diminuir zoom">−</button>
+    <button class="btn" id="gz-in" aria-label="Aumentar zoom">+</button>
+    <button class="btn" id="gz-fit">Ajustar</button>
+  </div>
+  <div class="gempty" id="g-empty" hidden>A árvore ainda é só terra. Crie uma caixa raiz e o primeiro galho nasce aqui.</div>
+  <div class="hint">As frutas são as caixas e cada caixa-filha vira um galho. Clique numa fruta para abrir a página dela.</div>
+</section>
+
+<section class="page" id="page" hidden aria-label="Página da caixa">
+  <div class="pbar">
+    <button class="btn primary" id="p-back">← Voltar</button>
+    <nav class="crumbs" id="crumbs" aria-label="Caminho"></nav>
+    <span class="status" id="p-status" aria-live="polite"></span>
+  </div>
+  <div class="pscroll" id="pscroll">
+    <article class="sheet">
+      <input type="text" class="ptitle" id="p-title" maxlength="80" placeholder="Título da página" autocomplete="off" aria-label="Título">
+      <div class="pmeta">
+        <label for="p-rel">Relação com a caixa-mãe<input type="text" id="p-rel" maxlength="30" autocomplete="off"></label>
+        <label for="p-sum">Resumo (aparece na caixa)<input type="text" id="p-sum" maxlength="120" autocomplete="off"></label>
+        <div class="swatches" id="swatches" role="group" aria-label="Cor da caixa">
+          <button class="sw c0" data-c="0" aria-label="Neutra"></button>
+          <button class="sw c1" data-c="1" aria-label="Verde-água"></button>
+          <button class="sw c2" data-c="2" aria-label="Âmbar"></button>
+          <button class="sw c3" data-c="3" aria-label="Rosa"></button>
+          <button class="sw c4" data-c="4" aria-label="Índigo"></button>
+        </div>
+      </div>
+      <div class="ptools" id="ptools" role="toolbar" aria-label="Formatação">
+        <button data-cmd="bold" aria-label="Negrito"><b>B</b></button>
+        <button data-cmd="italic" aria-label="Itálico"><i>I</i></button>
+        <span class="sep"></span>
+        <button data-cmd="h2">Título</button>
+        <button data-cmd="h3">Subtítulo</button>
+        <button data-cmd="blockquote">Citação</button>
+        <span class="sep"></span>
+        <button data-cmd="insertUnorderedList">Lista</button>
+        <button data-cmd="insertOrderedList">1. 2. 3.</button>
+        <button data-cmd="insertHorizontalRule">Linha</button>
+        <span class="sep"></span>
+        <button data-cmd="img">Imagem</button>
+      </div>
+      <div class="editor" id="editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Conteúdo da página"
+           data-ph="Escreva aqui. Para pôr uma imagem, use o botão Imagem, cole (Ctrl+V) ou arraste um arquivo para dentro da página."></div>
+      <div class="pact">
+        <button class="btn" id="a-child">+ Caixa filha</button>
+        <button class="btn" id="a-sib">+ Caixa irmã</button>
+        <button class="btn danger" id="a-del">Excluir esta caixa</button>
+      </div>
+    </article>
+  </div>
+  <input type="file" id="imgfile" accept="image/*" multiple hidden>
+</section>
+<section class="gallery" id="gallery" hidden aria-label="Galeria">
+  <div class="gbar">
+    <button class="btn primary" id="g-back">← Voltar à árvore</button>
+    <h2 id="g-heading">Galeria</h2>
+    <input type="text" class="bk-title" id="bk-title" maxlength="60" placeholder="Livro sem título" aria-label="Título do livro" autocomplete="off" hidden>
+    <span class="status" id="bk-status" aria-live="polite"></span>
+    <button class="btn danger" id="bk-del" hidden>Excluir livro</button>
+  </div>
+  <div class="shelfview" id="shelfview">
+    <p class="muted" id="gs-empty" hidden>A estante está vazia. Clique em Novo livro para abrir a primeira página.</p>
+    <div id="shelves"></div>
+  </div>
+  <div class="reader" id="reader" hidden>
+    <button class="turn" id="g-prev" aria-label="Página anterior">‹</button>
+    <div class="bookwrap" id="bookwrap">
+      <div class="open-book" id="openbook">
+        <div class="half l"><textarea class="pg" id="pg-l" spellcheck="true"></textarea><span class="pgno" id="no-l"></span></div>
+        <div class="half r" id="half-r"><textarea class="pg" id="pg-r" spellcheck="true"></textarea><span class="pgno" id="no-r"></span></div>
+        <textarea class="pg measure" id="pg-m" tabindex="-1" aria-hidden="true"></textarea>
+      </div>
+      <span class="gpos" id="g-pos" aria-live="polite"></span>
+    </div>
+    <button class="turn" id="g-next" aria-label="Próxima página">›</button>
+  </div>
+</section>
+<section class="gallery" id="pub" hidden aria-label="Publicações">
+  <div class="gbar">
+    <button class="btn primary" id="pb-back">← Voltar à árvore</button>
+    <h2 id="pb-head">Publicações</h2>
+    <span class="status" id="pb-status" aria-live="polite"></span>
+  </div>
+  <div class="pbody"><div class="pcol">
+    <div class="pcard pcomp" id="pb-comp">
+      <select id="pb-sel" aria-label="Anotação a publicar"></select>
+      <input type="text" id="pb-cap" maxlength="200" placeholder="Legenda (opcional)" autocomplete="off">
+      <button class="btn primary" id="pb-go">Publicar</button>
+    </div>
+    <div class="pfeed" id="pb-feed"></div>
+  </div></div>
+</section>
+</div>
+</div>
+<div class="imgbar" id="imgbar" hidden>
+  <button data-w="s">Pequena</button><button data-w="m">Média</button><button data-w="l">Grande</button>
+  <button class="danger" data-w="x">Remover</button>
+</div>
+
+<script>
+/* =========================================================
+   1) ESTADO
+   Cada caixa é um objeto simples: { id, parent, title, note, rel, color, collapsed, pg }.
+   "parent" guarda o id da caixa-mãe (ou null quando é uma raiz).
+   "note" é o resumo curto que aparece na caixa; "pg" diz se a página dela tem conteúdo.
+   O texto e as imagens da página ficam guardados à parte (seção 8), um registro por caixa.
+   ========================================================= */
+const W = 190, H = 64, GX = 104, GY = 18;     // largura, altura e espaços entre as caixas
+const KEY = 'arvore-de-ideias-v1';             // chave do salvamento no navegador
+let nodes = [];
+let byId = {};
+let sel = null;                                // id da caixa selecionada
+let openId = null;                             // id da caixa cuja página está aberta (null = vendo a árvore)
+let view = { x: 40, y: 40, k: 1 };             // deslocamento e zoom do quadro
+let pos = {};                                  // posição (coluna, linha) calculada de cada caixa visível
+let dirty = false;                             // true depois da primeira edição do usuário
+
+const $ = (id) => document.getElementById(id);
+const canvas = $('canvas'), world = $('world'), layer = $('layer'), edges = $('edges');
+const editor = $('editor');
+
+const uid = () => 'n' + Math.random().toString(36).slice(2, 9);
+const reindex = () => { byId = {}; nodes.forEach(n => byId[n.id] = n); };
+const childrenOf = (id) => nodes.filter(n => n.parent === id);
+
+function countDesc(id) {
+  let c = 0;
+  childrenOf(id).forEach(ch => { c += 1 + countDesc(ch.id); });
+  return c;
+}
+
+/* Exemplo inicial, só para mostrar como o quadro funciona. Edite ou use "Limpar tudo". */
+function sample() {
+  return [
+    { id: 'k',  parent: null, title: 'Kamio', note: 'Exemplo: clique para abrir a página', rel: '', color: 1, collapsed: false },
+    { id: 'r',  parent: 'k', title: 'Os 4 reinos', note: 'Cada reino tem um rei e dois guardiões', rel: 'contém', color: 0, collapsed: false },
+    { id: 'r1', parent: 'r', title: 'Ludin', note: 'Sul · rei dos ventos', rel: 'reino', color: 0, collapsed: false },
+    { id: 'r2', parent: 'r', title: 'Inu', note: 'Norte · rei do fogo', rel: 'reino', color: 0, collapsed: false },
+    { id: 'r3', parent: 'r', title: 'Sert', note: 'Oeste · rei das fendas', rel: 'reino', color: 0, collapsed: false },
+    { id: 'r4', parent: 'r', title: 'Podser', note: 'Leste · rei da morte', rel: 'reino', color: 0, collapsed: false },
+    { id: 't',  parent: 'k', title: 'Tanio', note: 'Plebeia com braço e pernas de ferro', rel: 'personagem', color: 2, collapsed: false },
+    { id: 'h',  parent: 't', title: 'Haruk', note: 'Guarda real e mestre', rel: 'mestre de', color: 2, collapsed: false },
+    { id: 'm',  parent: 'h', title: 'Maren', note: 'Filha do guarda, cozinheira', rel: 'filha de', color: 3, collapsed: false },
+    { id: 'y',  parent: 't', title: 'Yan', note: 'Espírito da Água', rel: 'vive em', color: 4, collapsed: false },
+    { id: 'p',  parent: 'k', title: 'A profecia', note: 'Todos acham que é sobre Kaelen', rel: 'anuncia', color: 4, collapsed: false },
+    { id: 'l',  parent: 'p', title: 'Luan', note: 'O verdadeiro portador', rel: 'cumpre', color: 1, collapsed: false },
+    { id: 'ka', parent: 'p', title: 'Kaelen', note: 'O falso escolhido', rel: 'todos acham', color: 3, collapsed: false },
+  ];
+}
+
+/* =========================================================
+   2) LAYOUT
+   Regra da árvore: uma folha ocupa uma linha nova; a mãe fica centralizada
+   na altura dos filhos. A coluna é a profundidade (raiz = 0).
+   ========================================================= */
+function computeLayout() {
+  pos = {};
+  let row = 0;
+  const kids = {};
+  const roots = [];
+  nodes.forEach(n => {
+    if (n.parent && byId[n.parent]) (kids[n.parent] = kids[n.parent] || []).push(n);
+    else roots.push(n);
+  });
+  const place = (n, depth) => {
+    const ch = n.collapsed ? [] : (kids[n.id] || []);
+    if (!ch.length) { pos[n.id] = { col: depth, row }; row += 1; return; }
+    ch.forEach(c => place(c, depth + 1));
+    pos[n.id] = { col: depth, row: (pos[ch[0].id].row + pos[ch[ch.length - 1].id].row) / 2 };
+  };
+  roots.forEach(r => { place(r, 0); row += 0.6; });   // espaço extra entre árvores diferentes
+}
+const px = (p) => p.col * (W + GX);
+const py = (p) => p.row * (H + GY);
+
+/* =========================================================
+   3) DESENHO DA ÁRVORE
+   Apagamos e recriamos as caixas e linhas a cada mudança. Com poucas
+   centenas de caixas isso é instantâneo e mantém o código simples.
+   ========================================================= */
+const PAGE_ICON = '<svg class="pgi" viewBox="0 0 12 14" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x=".7" y=".7" width="10.6" height="12.6" rx="1.6"/><path d="M3 4.5h6M3 7h6M3 9.5h3.5"/></svg>';
+
+function render() {
+  computeLayout();
+  layer.textContent = '';
+  edges.textContent = '';
+  const NS = 'http://www.w3.org/2000/svg';
+
+  nodes.forEach(n => {
+    const p = pos[n.id];
+    if (!p) return;                                    // dentro de uma caixa recolhida
+    const x = px(p), y = py(p);
+
+    // linha até a caixa-mãe, com o nome da relação no meio
+    if (n.parent && pos[n.parent]) {
+      const pp = pos[n.parent];
+      const x1 = px(pp) + W, y1 = py(pp) + H / 2, x2 = x, y2 = y + H / 2, mx = (x1 + x2) / 2;
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+      edges.appendChild(path);
+      if (n.rel) {
+        const lab = document.createElement('div');
+        lab.className = 'rel';
+        lab.textContent = n.rel;
+        lab.dataset.id = n.id;
+        lab.title = n.rel;
+        lab.style.transform = `translate(${mx}px,${(y1 + y2) / 2}px) translate(-50%,-50%)`;
+        layer.appendChild(lab);
+      }
+    }
+
+    const el = document.createElement('div');
+    el.className = 'node c' + (n.color || 0) + (n.id === sel ? ' sel' : '');
+    el.dataset.id = n.id;
+    el.tabIndex = 0;
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', 'Abrir página: ' + (n.title || 'sem título'));
+    el.style.transform = `translate(${x}px,${y}px)`;
+    const t = document.createElement('div'); t.className = 't'; t.textContent = n.title || 'Sem título';
+    const no = document.createElement('div'); no.className = 'n'; no.textContent = n.note || '';
+    el.append(t, no);
+    if (n.pg) el.insertAdjacentHTML('beforeend', PAGE_ICON);   // ícone: esta caixa tem conteúdo na página
+
+    if (childrenOf(n.id).length) {
+      const tog = document.createElement('button');
+      tog.className = 'tog'; tog.dataset.act = 'fold';
+      tog.textContent = n.collapsed ? '+' + countDesc(n.id) : '–';
+      tog.setAttribute('aria-label', n.collapsed ? 'Expandir' : 'Recolher');
+      el.appendChild(tog);
+    }
+    if (n.id === sel) {
+      const add = document.createElement('button');
+      add.className = 'add'; add.dataset.act = 'add'; add.textContent = '+';
+      add.setAttribute('aria-label', 'Adicionar caixa filha');
+      el.appendChild(add);
+    }
+    layer.appendChild(el);
+  });
+  renderGarden();                                      // a árvore viva acompanha as mesmas caixas
+}
+
+function applyView() {
+  world.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.k})`;
+  canvas.style.backgroundPosition = `${view.x}px ${view.y}px`;
+  canvas.style.backgroundSize = `${24 * view.k}px ${24 * view.k}px`;
+}
+
+function zoomAt(cx, cy, f) {
+  const k2 = Math.min(2, Math.max(0.25, view.k * f));
+  const r = k2 / view.k;
+  view.x = cx - (cx - view.x) * r;
+  view.y = cy - (cy - view.y) * r;
+  view.k = k2;
+  applyView();
+}
+
+function fit() {
+  const ids = Object.keys(pos);
+  if (!ids.length) { view = { x: 40, y: 40, k: 1 }; applyView(); return; }
+  let maxX = 0, maxY = 0;
+  ids.forEach(id => { maxX = Math.max(maxX, px(pos[id]) + W); maxY = Math.max(maxY, py(pos[id]) + H); });
+  const cw = canvas.clientWidth, ch = canvas.clientHeight, pad = 48;
+  if (!cw || !ch) return;                              // quadro escondido (página aberta)
+  const k = Math.min(1.1, Math.max(0.25, Math.min((cw - 2 * pad) / maxX, (ch - 2 * pad) / maxY)));
+  view = { k, x: (cw - maxX * k) / 2, y: (ch - maxY * k) / 2 };
+  applyView();
+}
+
+/* Ao voltar da página, se a caixa estiver fora da tela, centraliza nela. */
+function ensureVisible(id) {
+  const p = pos[id]; if (!p) return;
+  const cw = canvas.clientWidth, ch = canvas.clientHeight;
+  const sx = view.x + px(p) * view.k, sy = view.y + py(p) * view.k;
+  if (sx < 10 || sy < 50 || sx + W * view.k > cw - 10 || sy + H * view.k > ch - 10) {
+    view.x = cw / 2 - (px(p) + W / 2) * view.k;
+    view.y = ch / 2 - (py(p) + H / 2) * view.k;
+    applyView();
+  }
+}
+
+/* =========================================================
+   4) AÇÕES (criar, excluir, recolher)
+   ========================================================= */
+function select(id) {
+  sel = id;
+  armedDelete = false;
+  render();
+  $('hint').style.visibility = id ? 'hidden' : 'visible';
+}
+
+function addNode(parentId) {
+  const par = parentId ? byId[parentId] : null;
+  const n = { id: uid(), parent: parentId || null, title: '', note: '', rel: '', color: par ? par.color || 0 : 1, collapsed: false, pg: false };
+  if (par) par.collapsed = false;
+  nodes.push(n); reindex();
+  dirty = true;
+  openPage(n.id);                                      // a caixa nova já abre na página, pronta para escrever
+  $('p-title').focus();
+  save();
+}
+const addChild = () => sel && addNode(sel);
+const addSibling = () => sel && addNode(byId[sel].parent);
+
+let armedDelete = false, armTimer = null;
+function removeSelected() {
+  if (!sel) return;
+  const total = countDesc(sel);
+  if (total > 0 && !armedDelete) {                    // com filhas, pede uma segunda confirmação
+    armedDelete = true; updateDeleteBtn();
+    clearTimeout(armTimer); armTimer = setTimeout(() => { armedDelete = false; updateDeleteBtn(); }, 4000);
+    return;
+  }
+  const doomed = new Set();
+  const collect = (id) => { doomed.add(id); childrenOf(id).forEach(c => collect(c.id)); };
+  collect(sel);
+  const parent = byId[sel].parent;
+  doomed.forEach(deletePageData);
+  nodes = nodes.filter(n => !doomed.has(n.id)); reindex();
+  dirty = true;
+  if (openId) leavePage();                             // se estava na página, volta para a árvore
+  select(parent && byId[parent] ? parent : null);
+  save();
+}
+
+function toggleFold(id) {
+  const n = byId[id]; if (!n || !childrenOf(id).length) return;
+  n.collapsed = !n.collapsed; dirty = true;
+  render(); save();
+}
+
+/* =========================================================
+   5) PÁGINA DA CAIXA
+   Clicar numa caixa troca a árvore por uma página de edição:
+   título, relação, resumo, cor e um editor de texto com imagens.
+   "Voltar à árvore" (ou Esc) desfaz a troca.
+   ========================================================= */
+function leavePage() {
+  openId = null;
+  document.body.classList.remove('in-page');
+  $('page').hidden = true;
+  hideImgBar();
+}
+
+function openPage(id) {
+  if (openId) flushPage();                             // salva a página anterior antes de trocar
+  const n = byId[id]; if (!n) return;
+  openId = id; sel = id; armedDelete = false;
+  document.body.classList.add('in-page');
+  $('page').hidden = false;
+  render();
+  $('p-title').value = n.title;
+  $('p-sum').value = n.note;
+  const rel = $('p-rel');
+  rel.value = n.rel; rel.disabled = !n.parent;
+  rel.placeholder = n.parent ? 'ex.: mestre de, depende de' : 'A raiz não tem caixa-mãe';
+  syncSwatches(); updateDeleteBtn(); buildCrumbs(n);
+  $('p-status').textContent = '';
+  hideImgBar();
+  loadPageContent(id);
+  $('pscroll').scrollTop = 0;
+}
+
+function closePage() {
+  if (!openId) return;
+  flushPage();
+  const id = openId;
+  leavePage();
+  select(id);
+  if (tab === 'tree') gEnsure(id);
+  else { applyView(); ensureVisible(id); }
+}
+
+function buildCrumbs(n) {
+  const chain = [];
+  for (let p = n.parent && byId[n.parent]; p; p = p.parent && byId[p.parent]) chain.unshift(p);
+  const box = $('crumbs'); box.textContent = '';
+  chain.forEach(a => {
+    const b = document.createElement('button');
+    b.textContent = a.title || 'Sem título';
+    b.onclick = () => openPage(a.id);
+    box.append(b, document.createTextNode('›'));
+  });
+  const cur = document.createElement('span');
+  cur.className = 'cur'; cur.textContent = n.title || 'Nova caixa';
+  box.appendChild(cur);
+}
+function syncSwatches() {
+  const n = byId[openId]; if (!n) return;
+  document.querySelectorAll('.sw').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.c === (n.color || 0))));
+}
+function updateDeleteBtn() {
+  const b = $('a-del'); if (!sel || !byId[sel]) return;
+  const total = countDesc(sel);
+  b.classList.toggle('armed', armedDelete);
+  b.textContent = armedDelete ? `Confirmar: excluir com ${total} filha${total > 1 ? 's' : ''}` : 'Excluir esta caixa';
+}
+function onField(field, value) {
+  const n = byId[openId]; if (!n) return;
+  n[field] = value; dirty = true;
+  if (field === 'title') buildCrumbs(n);
+  render(); save();
+}
+$('p-title').addEventListener('input', e => onField('title', e.target.value));
+$('p-rel').addEventListener('input', e => onField('rel', e.target.value));
+$('p-sum').addEventListener('input', e => onField('note', e.target.value));
+$('swatches').addEventListener('click', e => {
+  const b = e.target.closest('.sw'); if (!b || !openId) return;
+  byId[openId].color = +b.dataset.c; dirty = true; render(); syncSwatches(); save();
+});
+$('p-back').onclick = closePage;
+$('a-child').onclick = addChild;
+$('a-sib').onclick = addSibling;
+$('a-del').onclick = removeSelected;
+
+/* =========================================================
+   6) EDITOR DE TEXTO E IMAGENS
+   O editor é um <div contenteditable>. Os botões usam document.execCommand
+   (antigo, mas funciona em todos os navegadores). Antes de guardar, o HTML
+   passa por uma limpeza que só deixa passar as tags e atributos da lista.
+   ========================================================= */
+try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (_) {}
+
+const ALLOWED = new Set(['P', 'BR', 'B', 'STRONG', 'I', 'EM', 'U', 'H2', 'H3', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'HR', 'IMG', 'A', 'DIV', 'SPAN']);
+const DROP = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'LINK', 'META', 'FORM', 'INPUT', 'BUTTON', 'TEXTAREA', 'SELECT', 'SVG', 'MATH']);
+const SRC_OK = /^(data:image\/(png|jpe?g|gif|webp);base64,|https:\/\/|\/_blob\/)/i;
+function sanitize(html) {
+  const doc = new DOMParser().parseFromString('<body>' + html + '</body>', 'text/html');
+  const walk = (node) => {
+    [...node.childNodes].forEach(ch => {
+      if (ch.nodeType === 3) return;
+      if (ch.nodeType !== 1) { ch.remove(); return; }
+      const tag = ch.tagName;
+      if (DROP.has(tag.toUpperCase())) { ch.remove(); return; }
+      if (!ALLOWED.has(tag)) { walk(ch); ch.replaceWith(...ch.childNodes); return; }   // tag desconhecida: mantém só o conteúdo
+      const src = ch.getAttribute('src') || '', href = ch.getAttribute('href') || '', w = ch.getAttribute('data-w');
+      [...ch.attributes].forEach(a => ch.removeAttribute(a.name));
+      if (tag === 'IMG') {
+        if (!SRC_OK.test(src)) { ch.remove(); return; }
+        ch.setAttribute('src', src); ch.setAttribute('alt', '');
+        ch.setAttribute('data-w', ['s', 'm', 'l'].includes(w) ? w : 'm');
+      }
+      if (tag === 'A') {
+        if (/^https?:\/\//i.test(href)) { ch.setAttribute('href', href); ch.setAttribute('target', '_blank'); ch.setAttribute('rel', 'noopener noreferrer'); }
+      }
+      walk(ch);
+    });
+  };
+  walk(doc.body);
+  return doc.body.innerHTML;
+}
+
+/* Guardamos a posição do cursor, porque clicar num botão da barra tira o foco do texto. */
+let lastRange = null;
+document.addEventListener('selectionchange', () => {
+  const s = window.getSelection();
+  if (s.rangeCount && editor.contains(s.anchorNode)) lastRange = s.getRangeAt(0).cloneRange();
+});
+function restoreRange() {
+  editor.focus();
+  const s = window.getSelection();
+  if (lastRange && editor.contains(lastRange.commonAncestorContainer)) { s.removeAllRanges(); s.addRange(lastRange); }
+  else { const r = document.createRange(); r.selectNodeContents(editor); r.collapse(false); s.removeAllRanges(); s.addRange(r); }
+}
+
+const ptools = $('ptools');
+ptools.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });   // não perde a seleção
+ptools.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const c = b.dataset.cmd;
+  restoreRange();
+  if (c === 'img') { $('imgfile').click(); return; }
+  if (c === 'h2' || c === 'h3' || c === 'blockquote') {
+    const cur = (document.queryCommandValue('formatBlock') || '').toLowerCase();
+    document.execCommand('formatBlock', false, cur === c ? 'p' : c);       // clicar de novo volta a parágrafo normal
+  } else document.execCommand(c);
+  onPageInput();
+});
+
+editor.addEventListener('input', onPageInput);
+editor.addEventListener('paste', e => {
+  const files = [...(e.clipboardData ? e.clipboardData.files : [])].filter(f => f.type.startsWith('image/'));
+  e.preventDefault();
+  if (files.length) { files.forEach(addImageFile); return; }
+  const text = e.clipboardData ? e.clipboardData.getData('text/plain') : '';
+  if (text) document.execCommand('insertText', false, text);               // cola só o texto, sem formatação externa
+});
+editor.addEventListener('dragover', e => { if ([...e.dataTransfer.types].includes('Files')) e.preventDefault(); });
+editor.addEventListener('drop', e => {
+  const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+  if (!files.length) return;
+  e.preventDefault();
+  const r = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null;
+  if (r && editor.contains(r.commonAncestorContainer)) lastRange = r;
+  files.forEach(addImageFile);
+});
+$('imgfile').addEventListener('change', e => { [...e.target.files].forEach(addImageFile); e.target.value = ''; });
+
+/* Reduz fotos grandes antes de guardar (GIF e SVG ficam como estão). */
+async function downscale(file, max, q) {
+  const bmp = await createImageBitmap(file);
+  const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  const type = file.type === 'image/png' ? 'image/webp' : 'image/jpeg';
+  return new Promise((ok, no) => c.toBlob(b => b ? ok(b) : no(new Error('falha')), type, q));
+}
+const toDataUrl = (blob) => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(blob); });
+
+let assetsP = null;
+const getAssets = () => assetsP || (assetsP = (async () => {
+  try { return window.claude && window.claude.use ? await window.claude.use('assets') : null; } catch (_) { return null; }
+})());
+
+async function addImageFile(file) {
+  if (!file || !file.type.startsWith('image/') || !openId) return;
+  const id = openId;
+  $('p-status').textContent = 'Adicionando imagem…';
+  try {
+    let blob = file;
+    const plain = /gif|svg/.test(file.type);
+    if (!plain) blob = await downscale(file, 1600, 0.85);
+    let url = null;
+    const as = await getAssets();
+    if (as) { try { url = (await as.upload(blob)).url; } catch (_) { url = null; } }     // armazenamento de imagens da conta
+    if (!url) {                                                                           // sem ele, a imagem vai dentro do texto
+      if (!plain && blob.size > 350 * 1024) blob = await downscale(file, 1000, 0.7);
+      if (blob.size > 600 * 1024) throw new Error('grande');
+      url = await toDataUrl(blob);
+    }
+    if (openId !== id) return;
+    insertImage(url);
+    onPageInput();
+  } catch (_) {
+    $('p-status').textContent = 'Imagem grande demais para guardar aqui';
+  }
+}
+function insertImage(url) {
+  restoreRange();
+  const img = document.createElement('img');
+  img.src = url; img.alt = ''; img.setAttribute('data-w', 'm');
+  document.execCommand('insertHTML', false, img.outerHTML + '<p><br></p>');
+}
+
+/* Clicar numa imagem mostra a barrinha de tamanho. */
+const imgbar = $('imgbar');
+let curImg = null;
+function hideImgBar() { imgbar.hidden = true; if (curImg) curImg.classList.remove('sel'); curImg = null; }
+editor.addEventListener('click', e => {
+  if (e.target.tagName !== 'IMG') { hideImgBar(); return; }
+  hideImgBar();
+  curImg = e.target; curImg.classList.add('sel');
+  const r = curImg.getBoundingClientRect();
+  imgbar.hidden = false;
+  imgbar.style.left = Math.max(8, Math.min(r.left, window.innerWidth - imgbar.offsetWidth - 8)) + 'px';
+  imgbar.style.top = Math.max(8, r.top - imgbar.offsetHeight - 6) + 'px';
+});
+imgbar.addEventListener('mousedown', e => e.preventDefault());
+imgbar.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || !curImg) return;
+  if (b.dataset.w === 'x') curImg.remove(); else curImg.setAttribute('data-w', b.dataset.w);
+  hideImgBar(); onPageInput();
+});
+$('pscroll').addEventListener('scroll', hideImgBar);
+
+/* =========================================================
+   7) INTERAÇÃO NO QUADRO: clicar, arrastar o fundo, zoom
+   ========================================================= */
+let pan = null, moved = 0;
+canvas.addEventListener('pointerdown', e => {
+  if (e.target.closest('.node, .rel, .zoombar')) return;
+  pan = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
+  moved = 0;
+  canvas.setPointerCapture(e.pointerId);
+  canvas.classList.add('panning');
+});
+canvas.addEventListener('pointermove', e => {
+  if (!pan) return;
+  const dx = e.clientX - pan.x, dy = e.clientY - pan.y;
+  moved = Math.max(moved, Math.hypot(dx, dy));
+  view.x = pan.vx + dx; view.y = pan.vy + dy;
+  applyView();
+});
+const endPan = () => {
+  if (!pan) return;
+  if (moved < 4 && sel) select(null);                  // clique no fundo: tira a seleção
+  pan = null; canvas.classList.remove('panning');
+};
+canvas.addEventListener('pointerup', endPan);
+canvas.addEventListener('pointercancel', endPan);
+
+layer.addEventListener('click', e => {
+  const act = e.target.closest('[data-act]');
+  const el = e.target.closest('.node, .rel');
+  if (!el) return;
+  const id = el.dataset.id;
+  if (act && act.dataset.act === 'fold') { toggleFold(id); return; }
+  if (act && act.dataset.act === 'add') { addNode(id); return; }
+  openPage(id);                                        // clique na caixa (ou no nome da relação): abre a página
+});
+layer.addEventListener('keydown', e => {                // Enter ou Espaço numa caixa focada abre a página
+  const el = e.target.closest('.node');
+  if (el && (e.key === 'Enter' || e.key === ' ') && e.target === el) { e.preventDefault(); openPage(el.dataset.id); }
+});
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const r = canvas.getBoundingClientRect();
+  zoomAt(e.clientX - r.left, e.clientY - r.top, Math.exp(-e.deltaY * 0.0015));
+}, { passive: false });
+$('z-in').onclick = () => zoomAt(canvas.clientWidth / 2, canvas.clientHeight / 2, 1.2);
+$('z-out').onclick = () => zoomAt(canvas.clientWidth / 2, canvas.clientHeight / 2, 1 / 1.2);
+$('z-fit').onclick = fit;
+
+document.addEventListener('keydown', e => {
+  if (document.body.classList.contains('in-gallery') || document.body.classList.contains('in-pub')) return;
+  if (openId) { if (e.key === 'Escape') { if (!imgbar.hidden) hideImgBar(); else closePage(); } return; }
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (!sel) return;
+  if (e.key === 'a' || e.key === 'A') { e.preventDefault(); addChild(); }
+  else if (e.key === 's' || e.key === 'S') { e.preventDefault(); addSibling(); }
+  else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); removeSelected(); }
+  else if (e.key === 'Escape') select(null);
+});
+
+/* =========================================================
+   8) SALVAR E CARREGAR
+   Sempre salva uma cópia neste navegador. Se a conta do visualizador permitir
+   (capacidade "db"), salva também no banco do artefato, e aí os dados
+   acompanham você em outros aparelhos. A árvore fica num registro só
+   ("diagram/main") e cada página em um registro próprio ("pages/<id>"),
+   para o texto e as imagens de uma caixa não pesarem na árvore.
+   ========================================================= */
+let rawDb = null, myId = null, dbRef = null, dbDoc = null, saveTimer = null, writing = false, again = false;
+const strip = (n) => ({ id: n.id, parent: n.parent, title: n.title, note: n.note, rel: n.rel, color: n.color || 0, collapsed: !!n.collapsed, pg: !!n.pg });
+const setStatus = (t) => { $('status').textContent = t; };
+
+function cleanList(list) {
+  if (!Array.isArray(list)) return null;
+  return list.filter(n => n && typeof n.id === 'string' && typeof n.title === 'string')
+    .map(n => ({ id: n.id, parent: typeof n.parent === 'string' ? n.parent : null, title: n.title.slice(0, 80),
+      note: typeof n.note === 'string' ? n.note.slice(0, 120) : '', rel: typeof n.rel === 'string' ? n.rel.slice(0, 30) : '',
+      color: [0, 1, 2, 3, 4].includes(n.color) ? n.color : 0, collapsed: !!n.collapsed, pg: !!n.pg }));
+}
+function readLocal() {
+  try { const r = localStorage.getItem(KEY); return r ? cleanList(JSON.parse(r).nodes) : null; } catch (_) { return null; }
+}
+function save() {
+  setStatus('Salvando…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flush, 500);                  // junta várias digitações numa só gravação
+}
+async function flush() {
+  if (writing) { again = true; return; }               // uma gravação por vez
+  writing = true;
+  let where = 'neste navegador';
+  do {
+    again = false;
+    const data = { nodes: nodes.map(strip) };
+    try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (_) { where = 'sem salvar (armazenamento bloqueado)'; }
+    if (dbDoc) {
+      try { await dbDoc.set(data); where = 'na sua conta'; } catch (_) { /* sem permissão de escrita: fica só no navegador */ }
+    }
+  } while (again);
+  writing = false;
+  setStatus('Salvo ' + where);
+}
+
+/* ---- páginas ---- */
+const PK = (id) => KEY + ':p:' + id;
+function readPageLocal(id) { try { const r = localStorage.getItem(PK(id)); return r ? JSON.parse(r) : null; } catch (_) { return null; } }
+function writePageLocal(id, obj) { try { localStorage.setItem(PK(id), JSON.stringify(obj)); return true; } catch (_) { return false; } }
+let chain = Promise.resolve();                         // fila: uma gravação de cada vez no banco
+function writePageDb(id, obj) {
+  if (!dbRef) return Promise.resolve(false);
+  chain = chain.then(() => dbRef.doc('pages/' + id).set(obj).then(() => true, () => false));
+  return chain;
+}
+function deletePageData(id) {
+  try { localStorage.removeItem(PK(id)); } catch (_) {}
+  if (dbRef) chain = chain.then(() => dbRef.doc('pages/' + id).delete().then(() => 0, () => 0));
+}
+async function getPage(id) {                           // usado na exportação: pega a versão mais nova
+  let best = readPageLocal(id);
+  if (dbRef) {
+    try { const s = await dbRef.doc('pages/' + id).get(); if (s.exists) { const d = s.data(); if (d && typeof d.html === 'string' && (!best || d.t > best.t)) best = d; } } catch (_) {}
+  }
+  return best;
+}
+
+let pageDirty = false, pageTimer = null;
+function onPageInput() {
+  pageDirty = true;
+  $('p-status').textContent = 'Salvando…';
+  clearTimeout(pageTimer);
+  pageTimer = setTimeout(flushPage, 700);
+}
+async function flushPage() {
+  clearTimeout(pageTimer);
+  if (!pageDirty || !openId) return;
+  const id = openId, n = byId[id];                     // guardados antes de qualquer espera, mesmo que a página feche
+  const html = sanitize(editor.innerHTML);
+  const has = !!(editor.textContent.trim() || editor.querySelector('img'));
+  pageDirty = false;
+  const obj = { html, t: Date.now() };
+  const okLocal = writePageLocal(id, obj);
+  if (n && !!n.pg !== has) { n.pg = has; dirty = true; render(); save(); }   // atualiza o ícone na caixa
+  const okDb = await writePageDb(id, obj);
+  if (openId === id) $('p-status').textContent = okDb ? 'Salvo na sua conta' : okLocal ? 'Salvo neste navegador' : 'Não foi possível salvar';
+}
+function loadPageContent(id) {
+  const local = readPageLocal(id);
+  editor.innerHTML = local ? sanitize(local.html) : '';
+  pageDirty = false;
+  if (!dbRef) return;
+  dbRef.doc('pages/' + id).get().then(s => {           // se a conta tiver uma versão mais nova, usa ela
+    if (openId !== id || pageDirty || !s.exists) return;
+    const d = s.data();
+    if (d && typeof d.html === 'string' && (!local || d.t > local.t)) editor.innerHTML = sanitize(d.html);
+  }).catch(() => {});
+}
+
+async function initStorage() {
+  try {
+    const db = window.claude && window.claude.use ? await window.claude.use('db') : null;
+    if (!db) { setStatus('Dados só neste navegador'); return; }
+    rawDb = db;
+    try { const us = await window.claude.use('user'); myId = us ? await us.id() : null; } catch (_) { myId = null; }
+    if (!myId) { setStatus('Dados só neste navegador'); return; }      // sem identificação, não grava no banco (evita misturar com o grupo)
+    dbRef = { doc: (p) => db.collection('data/users/' + myId).doc(p.replace(/\//g, '_')) };   // cada pessoa grava só na própria área
+    dbDoc = dbRef.doc('diagram/main');
+    loadLinksDb();
+    const snap = await dbDoc.get();
+    if (snap.exists && !dirty) {
+      const list = cleanList(snap.data().nodes);
+      if (list) { nodes = list; reindex(); sel = null; render(); fit(); }
+    }
+    setStatus(snap.exists ? 'Carregado da sua conta' : (readLocal() ? 'Dados deste navegador' : 'Exemplo carregado'));
+  } catch (_) { setStatus('Dados só neste navegador'); }
+  refreshUser();
+}
+async function initDownloads() {
+  try { dlNS = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (_) { dlNS = null; }
+  $('b-export').hidden = !dlNS;                         // sem permissão de baixar arquivo, só resta "Copiar JSON"
+}
+
+$('b-root').onclick = () => addNode(null);
+let clearArmed = false;
+$('b-clear').onclick = function () {
+  if (!clearArmed) {
+    clearArmed = true; this.classList.add('armed'); this.textContent = 'Confirmar: apagar tudo';
+    setTimeout(() => { clearArmed = false; this.classList.remove('armed'); this.textContent = 'Limpar tudo'; }, 4000);
+    return;
+  }
+  clearArmed = false; this.classList.remove('armed'); this.textContent = 'Limpar tudo';
+  nodes.forEach(n => deletePageData(n.id));
+  nodes = []; reindex(); dirty = true; sel = null; render(); fit(); save();
+};
+
+/* =========================================================
+   10) ÁRVORE VIVA
+   Uma segunda visão dos mesmos dados: um tronco no chão, um galho para cada
+   caixa-filha e uma fruta (a caixa) na ponta de cada galho. Clicar numa fruta
+   abre a página dela. Quando você cria uma caixa, o galho novo cresce sozinho.
+   ========================================================= */
+const FW = 118, FH = 34, GXS = 142, DY = 112, GROUND = 210, TRUNK_T = 84;
+const SVGNS = 'http://www.w3.org/2000/svg';
+const gSvg = $('gsvg'), gw = $('gw'), garden = $('garden');
+let tab = 'boxes';                                     // 'boxes' (caixas) ou 'tree' (árvore viva)
+let gv = { x: 0, y: 0, k: 1, touched: false };         // posição e zoom da árvore viva
+let gKnown = null;                                     // ids já desenhados; null = desenhar tudo crescendo
+
+const hashId = (id) => { let h = 7; for (const c of id) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); };
+function svgEl(tag, attrs, parent) {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+/* Posição de cada caixa: folhas lado a lado, mães centralizadas sobre as filhas,
+   e cada nível sobe um degrau (y negativo = para cima). */
+function gLayout() {
+  const kids = {}, roots = [];
+  nodes.forEach(n => {
+    if (n.parent && byId[n.parent]) (kids[n.parent] = kids[n.parent] || []).push(n);
+    else roots.push(n);
+  });
+  const g = {};
+  let leaf = 0;
+  const place = (n, d) => {
+    const ch = n.collapsed ? [] : (kids[n.id] || []);
+    if (!ch.length) { g[n.id] = { x: leaf * GXS, y: -d * DY, d }; leaf += 1; return; }
+    ch.forEach(c => place(c, d + 1));
+    g[n.id] = { x: (g[ch[0].id].x + g[ch[ch.length - 1].id].x) / 2, y: -d * DY, d };
+  };
+  roots.forEach(r => { place(r, 0); leaf += 0.4; });
+  return { g, roots };
+}
+
+/* Ponto e direção de uma curva de Bézier (para pôr folhas ao longo do galho). */
+function bez(p, t) {
+  const u = 1 - t;
+  const x = u * u * u * p[0] + 3 * u * u * t * p[2] + 3 * u * t * t * p[4] + t * t * t * p[6];
+  const y = u * u * u * p[1] + 3 * u * u * t * p[3] + 3 * u * t * t * p[5] + t * t * t * p[7];
+  const dx = 3 * u * u * (p[2] - p[0]) + 6 * u * t * (p[4] - p[2]) + 3 * t * t * (p[6] - p[4]);
+  const dy = 3 * u * u * (p[3] - p[1]) + 6 * u * t * (p[5] - p[3]) + 3 * t * t * (p[7] - p[5]);
+  return { x, y, a: Math.atan2(dy, dx) };
+}
+function branchCurve(x0, y0, x1, y1, sway) {            // sai na vertical e chega na vertical: parece galho
+  const m = (y0 - y1) * 0.5;
+  return [x0, y0, x0 + sway, y0 - m, x1 - sway, y1 + m, x1, y1];
+}
+
+function renderGarden() {
+  if (openId || tab !== 'tree') return;                // escondida: não gasta tempo desenhando
+  gw.textContent = '';
+  $('g-empty').hidden = nodes.length > 0;
+  if (!nodes.length) { gKnown = new Set(); return; }
+
+  const { g, roots } = gLayout();
+  const ids = Object.keys(g);
+  const animAll = gKnown === null;                     // primeira vez nesta visita: tudo cresce
+  const fresh = new Set(ids.filter(id => animAll || !gKnown.has(id)));
+  gKnown = new Set(ids);
+
+  let minX = 1e9, maxX = -1e9;
+  ids.forEach(id => { minX = Math.min(minX, g[id].x); maxX = Math.max(maxX, g[id].x); });
+  const cx = roots.reduce((s, r) => s + g[r.id].x, 0) / roots.length;
+  const delayOf = (d) => animAll ? (d * 0.3).toFixed(2) + 's' : '0s';
+
+  // chão e tronco
+  svgEl('ellipse', { class: 'gr', cx: (minX + maxX) / 2, cy: GROUND + 8, rx: (maxX - minX) / 2 + FW + 130, ry: 30 }, gw);
+  svgEl('ellipse', { class: 'gr2', cx: cx, cy: GROUND + 4, rx: 70, ry: 12 }, gw);
+  svgEl('path', {
+    class: 'trunk' + (animAll ? ' rise' : ''),
+    d: `M${cx - 26},${GROUND} C${cx - 12},${GROUND - 22} ${cx - 13},${TRUNK_T + 50} ${cx - 8.5},${TRUNK_T} L${cx + 8.5},${TRUNK_T} C${cx + 13},${TRUNK_T + 50} ${cx + 12},${GROUND - 22} ${cx + 26},${GROUND} Z`
+  }, gw);
+
+  // galhos: um por caixa, ligando-a à caixa-mãe (ou ao tronco, se for raiz)
+  const branches = [];
+  nodes.forEach(n => {
+    const p = g[n.id]; if (!p) return;
+    const sway = ((hashId(n.id) % 21) - 10) * 1.6;
+    const w = n.parent && g[n.parent] ? Math.max(3, Math.min(17, 2.5 + Math.sqrt(countDesc(n.id) + 1) * 3.2)) : 17;
+    const from = n.parent && g[n.parent] ? g[n.parent] : { x: cx, y: TRUNK_T };
+    branches.push({ n, w, d: p.d, c: branchCurve(from.x, from.y, p.x, p.y, sway) });
+  });
+  branches.sort((a, b) => b.w - a.w);                  // os grossos por baixo
+  branches.forEach(b => {
+    const c = b.c;
+    const path = svgEl('path', { class: 'br', d: `M${c[0]},${c[1]} C${c[2]},${c[3]} ${c[4]},${c[5]} ${c[6]},${c[7]}`, 'stroke-width': b.w.toFixed(1) }, gw);
+    if (fresh.has(b.n.id)) {
+      let L = 400; try { L = Math.ceil(path.getTotalLength()) + 2; } catch (_) {}
+      path.setAttribute('class', 'br grow');
+      path.style.setProperty('--L', L);
+      path.style.setProperty('--d', delayOf(b.d));
+    }
+  });
+
+  // folhas ao longo dos galhos (enfeite)
+  branches.forEach(b => {
+    const h = hashId(b.n.id);
+    [0.5, 0.78].forEach((t, i) => {
+      const pt = bez(b.c, t);
+      const side = ((h >> i) & 1) ? 1 : -1;
+      const deg = (pt.a + side * Math.PI / 3) * 180 / Math.PI;
+      const leaf = svgEl('path', {
+        class: (i ? 'lf' : 'lf2') + (fresh.has(b.n.id) ? ' fade' : ''),
+        d: 'M0 0C5-7 15-6 19 0C15 6 5 7 0 0Z',
+        transform: `translate(${pt.x.toFixed(1)} ${pt.y.toFixed(1)}) rotate(${deg.toFixed(0)}) scale(${(0.8 + (h % 5) * 0.08).toFixed(2)})`
+      }, gw);
+      if (fresh.has(b.n.id)) leaf.style.setProperty('--d', (parseFloat(delayOf(b.d)) + 0.7) + 's');
+    });
+  });
+
+  // frutas: as caixas
+  nodes.forEach(n => {
+    const p = g[n.id]; if (!p) return;
+    const f = svgEl('g', { class: 'fruit' + (n.id === sel ? ' sel' : ''), 'data-id': n.id, transform: `translate(${p.x - FW / 2},${p.y - FH / 2})` }, gw);
+    const inner = svgEl('g', { class: 'fi' + (fresh.has(n.id) ? ' pop' : '') }, f);
+    if (fresh.has(n.id)) inner.style.setProperty('--d', (parseFloat(delayOf(p.d)) + 0.65) + 's');
+    const tip = svgEl('title', {}, inner);
+    tip.textContent = (n.title || 'Sem título') + (n.rel ? ' · ' + n.rel : '') + (n.note ? '\n' + n.note : '');
+    svgEl('path', { class: 'stem', d: `M${FW / 2},0 C${FW / 2},-4 ${FW / 2 + 3},-7 ${FW / 2 + 7},-9` }, inner);
+    svgEl('path', { class: 'lf', d: 'M0 0C5-7 15-6 19 0C15 6 5 7 0 0Z', transform: `translate(${FW / 2 + 6} -8) rotate(-28)` }, inner);
+    svgEl('rect', { class: 'fr c' + (n.color || 0), width: FW, height: FH, rx: 10 }, inner);
+    const t = svgEl('text', { class: 'ft', x: FW / 2, y: FH / 2 + 4.5, 'text-anchor': 'middle' }, inner);
+    const title = n.title || 'Sem título';
+    t.textContent = title.length > 15 ? title.slice(0, 14) + '…' : title;
+    if (childrenOf(n.id).length && n.collapsed) {       // ramo recolhido: mostra quantas caixas estão escondidas
+      const tg = svgEl('g', { class: 'gtog', 'data-act': 'fold', transform: `translate(${FW - 4},${FH - 2})` }, inner);
+      svgEl('circle', { r: 11 }, tg);
+      const tt = svgEl('text', { y: 3.5, 'text-anchor': 'middle' }, tg);
+      tt.textContent = '+' + countDesc(n.id);
+    }
+  });
+}
+
+function applyG() { gw.setAttribute('transform', `translate(${gv.x},${gv.y}) scale(${gv.k})`); }
+function gzoom(cx, cy, f) {
+  const k2 = Math.min(2, Math.max(0.2, gv.k * f)), r = k2 / gv.k;
+  gv.x = cx - (cx - gv.x) * r; gv.y = cy - (cy - gv.y) * r; gv.k = k2; gv.touched = true;
+  applyG();
+}
+function gfit() {
+  const cw = garden.clientWidth, ch = garden.clientHeight;
+  if (!cw || !ch) return;
+  if (!nodes.length) { gv = { x: cw / 2, y: ch / 2, k: 1, touched: false }; applyG(); return; }
+  const { g } = gLayout();
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9;
+  Object.values(g).forEach(p => { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); });
+  x0 -= FW / 2 + 60; x1 += FW / 2 + 60; y0 -= FH / 2 + 40;
+  const y1 = GROUND + 50;
+  const k = Math.min(1.1, Math.max(0.2, Math.min(cw / (x1 - x0), ch / (y1 - y0))));
+  gv = { k, x: cw / 2 - ((x0 + x1) / 2) * k, y: ch / 2 - ((y0 + y1) / 2) * k, touched: false };
+  applyG();
+}
+function gEnsure(id) {                                  // centraliza na fruta se ela estiver fora da tela
+  const { g } = gLayout(); const p = g[id]; if (!p) return;
+  const cw = garden.clientWidth, ch = garden.clientHeight;
+  const sx = gv.x + p.x * gv.k, sy = gv.y + p.y * gv.k;
+  if (sx < 60 || sy < 60 || sx > cw - 60 || sy > ch - 60) {
+    gv.x = cw / 2 - p.x * gv.k; gv.y = ch / 2 - p.y * gv.k; applyG();
+  }
+}
+
+let gpan = null, gmoved = 0;
+garden.addEventListener('pointerdown', e => {
+  if (e.target.closest('.fruit, .zoombar')) return;
+  gpan = { x: e.clientX, y: e.clientY, vx: gv.x, vy: gv.y }; gmoved = 0;
+  garden.setPointerCapture(e.pointerId); garden.classList.add('panning');
+});
+garden.addEventListener('pointermove', e => {
+  if (!gpan) return;
+  const dx = e.clientX - gpan.x, dy = e.clientY - gpan.y;
+  gmoved = Math.max(gmoved, Math.hypot(dx, dy));
+  if (gmoved > 3) gv.touched = true;
+  gv.x = gpan.vx + dx; gv.y = gpan.vy + dy; applyG();
+});
+const gEnd = () => {
+  if (!gpan) return;
+  if (gmoved < 4 && sel) select(null);
+  gpan = null; garden.classList.remove('panning');
+};
+garden.addEventListener('pointerup', gEnd);
+garden.addEventListener('pointercancel', gEnd);
+garden.addEventListener('wheel', e => {
+  e.preventDefault();
+  const r = garden.getBoundingClientRect();
+  gzoom(e.clientX - r.left, e.clientY - r.top, Math.exp(-e.deltaY * 0.0015));
+}, { passive: false });
+gw.addEventListener('click', e => {
+  const f = e.target.closest('.fruit'); if (!f) return;
+  const id = f.dataset.id;
+  if (e.target.closest('[data-act="fold"]')) { toggleFold(id); return; }
+  openPage(id);
+});
+$('gz-in').onclick = () => gzoom(garden.clientWidth / 2, garden.clientHeight / 2, 1.2);
+$('gz-out').onclick = () => gzoom(garden.clientWidth / 2, garden.clientHeight / 2, 1 / 1.2);
+$('gz-fit').onclick = gfit;
+
+/* Abas: Caixas (a árvore de quadrados) e Árvore viva (o desenho). */
+function setTab(t) {
+  tab = t;
+  document.body.classList.toggle('tab-garden', t === 'tree');
+  $('tab-boxes').setAttribute('aria-selected', String(t === 'boxes'));
+  $('tab-tree').setAttribute('aria-selected', String(t === 'tree'));
+  requestAnimationFrame(() => {
+    if (t === 'tree') { gKnown = null; renderGarden(); gfit(); }   // gKnown = null: a árvore cresce de novo
+    else applyView();
+  });
+}
+$('tab-boxes').onclick = () => setTab('boxes');
+$('tab-tree').onclick = () => setTab('tree');
+
+/* =========================================================
+   11) MENU LATERAL: usuário, links de sites, permissões, importar/exportar
+   ========================================================= */
+const side = $('side');
+const mq = window.matchMedia('(max-width: 640px)');
+let userNS = null, viewer = null, permNS = null, dlNS = null;
+
+/* ---- abrir e fechar o menu ----
+   No computador ele fica ao lado do quadro; no celular vira uma gaveta por cima. */
+const sideIsOpen = () => mq.matches ? document.body.classList.contains('side-open') : !document.body.classList.contains('side-closed');
+function setSide(open) {
+  document.body.classList.toggle('side-open', mq.matches && open);
+  document.body.classList.toggle('side-closed', !mq.matches && !open);
+  $('menu-btn').setAttribute('aria-expanded', String(open));
+  $('scrim').hidden = !(mq.matches && open);
+  requestAnimationFrame(() => {                         // o quadro mudou de tamanho: reenquadra se você ainda não mexeu nele
+    if (tab === 'tree') { if (!gv.touched) gfit(); } else if (!sel) fit();
+  });
+}
+$('menu-btn').onclick = () => setSide(!sideIsOpen());
+mq.addEventListener('change', () => setSide(!mq.matches));   // ao girar ou redimensionar: aberto no computador, fechado no celular
+$('scrim').onclick = () => setSide(false);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && mq.matches && sideIsOpen() && !openId) setSide(false); });
+
+/* ---- seções (uma aberta de cada vez) ---- */
+function openSection(name) {
+  document.querySelectorAll('.sitem').forEach(b => {
+    const on = b.dataset.sec === name;
+    b.setAttribute('aria-expanded', String(on));
+    $('sec-' + b.dataset.sec).hidden = !on;
+  });
+  if (name === 'user') refreshUser();
+  if (name === 'perm') refreshPerms();
+  if (name === 'gal') renderGalList();
+  if (name === 'tema') syncThemeUi();
+}
+document.querySelectorAll('.sitem').forEach(b => {
+  b.addEventListener('click', () => openSection(b.getAttribute('aria-expanded') === 'true' ? '' : b.dataset.sec));
+});
+
+/* ---- usuário ---- */
+const NICK = KEY + ':nick';
+const readNick = () => { try { return localStorage.getItem(NICK) || ''; } catch (_) { return ''; } };
+async function initUser() {
+  try { userNS = window.claude && window.claude.use ? await window.claude.use('user') : null; } catch (_) { userNS = null; }
+  if (userNS) { try { viewer = await userNS.me(); } catch (_) { viewer = null; } }
+  refreshUser();
+}
+async function accessInfo() {                           // nível de acesso de quem está vendo
+  if (!userNS) return { role: 'Visitante (sem conta neste modo)', write: null, add: null };
+  let write = null, add = null;
+  try { write = await userNS.can('data.write'); add = await userNS.can('people.add'); } catch (_) {}
+  const v = viewer || {};
+  const role = v.isOwner ? 'Dono desta árvore' : v.canEdit ? 'Editor' : write === true ? 'Pode editar os dados' : write === false ? 'Somente leitura' : 'Visitante';
+  return { role, write, add };
+}
+async function refreshUser() {
+  const nick = readNick();
+  const name = nick || (viewer && viewer.name) || 'Visitante';
+  $('u-name').textContent = name;
+  const av = $('u-av'), ini = $('u-ini');
+  if (viewer && viewer.avatarUrl) { av.src = viewer.avatarUrl; av.hidden = false; ini.hidden = true; }
+  else { av.hidden = true; ini.hidden = false; ini.textContent = name.slice(0, 1).toUpperCase(); }
+  const info = await accessInfo();
+  $('u-role').textContent = info.role;
+  $('u-where').textContent = dbDoc ? 'Seus dados ficam salvos na sua conta e neste navegador.' : 'Seus dados ficam só neste navegador.';
+}
+$('u-nick').value = readNick();
+$('u-nick').addEventListener('input', e => {
+  try { localStorage.setItem(NICK, e.target.value.trim()); } catch (_) {}
+  refreshUser();
+});
+
+/* ---- permissões ---- */
+const PERM_ROWS = [
+  ['db', 'Salvar na sua conta'],
+  ['assets', 'Guardar imagens'],
+  ['downloads', 'Exportar arquivo'],
+  ['user', 'Saber quem você é'],
+];
+const PERM_TXT = { granted: 'Liberada', prompt: 'Pergunta ao usar', denied: 'Negada', unavailable: 'Indisponível' };
+async function getPerms() {
+  if (permNS) return permNS;
+  try { permNS = window.claude && window.claude.use ? await window.claude.use('permissions') : null; } catch (_) { permNS = null; }
+  return permNS;
+}
+async function refreshPerms() {
+  const box = $('perm-list'); box.textContent = '';
+  const ns = await getPerms();
+  $('perm-btns').hidden = !ns;
+  if (!ns) { $('perm-msg').textContent = 'As permissões só podem ser vistas quando a página é aberta pelo Claude.'; }
+  else $('perm-msg').textContent = '';
+  let st = {};
+  if (ns) { try { st = await ns.state(); } catch (_) {} }
+  PERM_ROWS.forEach(([key, label]) => {
+    const s = ns ? (st[key] || 'unavailable') : 'unavailable';
+    const li = document.createElement('li');
+    const a = document.createElement('span'); a.textContent = label;
+    const b = document.createElement('span'); b.className = 'pill ' + s; b.textContent = PERM_TXT[s];
+    li.append(a, b); box.appendChild(li);
+  });
+  const info = await accessInfo();
+  const yn = (v) => v === true ? 'sim' : v === false ? 'não' : 'não informado';
+  $('perm-access').textContent = '';
+  [['Seu acesso', info.role], ['Pode alterar a árvore na conta', yn(info.write)], ['Pode adicionar pessoas', yn(info.add)]].forEach(([k, v]) => {
+    const li = document.createElement('li');
+    const a = document.createElement('span'); a.textContent = k;
+    const b = document.createElement('strong'); b.textContent = v;
+    li.append(a, b); $('perm-access').appendChild(li);
+  });
+}
+$('perm-req').onclick = async () => { const ns = await getPerms(); if (ns) { try { await ns.request(); } catch (_) {} refreshPerms(); } };
+$('perm-manage').onclick = async () => {
+  const ns = await getPerms(); if (!ns) return;
+  try { await ns.manage(); refreshPerms(); }
+  catch (_) { $('perm-msg').textContent = 'Não foi possível abrir o painel. Use o menu Permissões do artefato.'; }
+};
+
+/* ---- links de sites ----
+   Lista de atalhos: clicar abre o site em outra aba; "Copiar" copia o endereço para você colar onde quiser. */
+const LK = KEY + ':links';
+let links = [], linksDirty = false, lTimer = null;
+const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (_) { return u; } };
+function cleanLinks(list) {
+  if (!Array.isArray(list)) return null;
+  return list.filter(l => l && typeof l.url === 'string' && /^https?:\/\//i.test(l.url))
+    .map(l => ({ id: typeof l.id === 'string' ? l.id : uid(), title: (String(l.title || '').slice(0, 60)) || hostOf(l.url), url: l.url.slice(0, 500) }));
+}
+function sampleLinks() {
+  return [{ id: 'e1', title: 'Exemplo · Claude', url: 'https://claude.ai' }, { id: 'e2', title: 'Exemplo · Wikipédia', url: 'https://pt.wikipedia.org' }];
+}
+function readLinksLocal() { try { const r = localStorage.getItem(LK); return r ? cleanLinks(JSON.parse(r).items) : null; } catch (_) { return null; } }
+function saveLinks() {
+  linksDirty = true; setStatus('Salvando links…');
+  clearTimeout(lTimer); lTimer = setTimeout(flushLinks, 400);
+}
+async function flushLinks() {
+  const data = { items: links };
+  let where = 'neste navegador';
+  try { localStorage.setItem(LK, JSON.stringify(data)); } catch (_) { where = 'sem salvar (armazenamento bloqueado)'; }
+  if (dbRef) {
+    const p = (chain = chain.then(() => dbRef.doc('diagram/links').set(data).then(() => true, () => false)));
+    if (await p) where = 'na sua conta';
+  }
+  setStatus('Links salvos ' + where);
+}
+async function loadLinksDb() {
+  if (!dbRef) return;
+  try {
+    const s = await dbRef.doc('diagram/links').get();
+    if (s.exists && !linksDirty) { const l = cleanLinks(s.data().items); if (l) { links = l; renderLinks(); } }
+  } catch (_) {}
+}
+function normUrl(v) {
+  v = v.trim(); if (!v) return null;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(v)) v = 'https://' + v;
+  try {
+    const u = new URL(v);
+    if (!/^https?:$/.test(u.protocol)) return null;
+    if (!u.hostname.includes('.') && u.hostname !== 'localhost') return null;
+    return u.href;
+  } catch (_) { return null; }
+}
+function renderLinks() {
+  const ul = $('l-list'); ul.textContent = '';
+  $('l-empty').hidden = links.length > 0;
+  links.forEach(l => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = l.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    const t = document.createElement('strong'); t.textContent = l.title;
+    const d = document.createElement('span'); d.textContent = hostOf(l.url);
+    a.append(t, d);
+    const cp = document.createElement('button'); cp.className = 'mini'; cp.textContent = 'Copiar'; cp.setAttribute('aria-label', 'Copiar endereço de ' + l.title);
+    cp.onclick = async () => {
+      try { await navigator.clipboard.writeText(l.url); cp.textContent = 'Copiado'; setTimeout(() => { cp.textContent = 'Copiar'; }, 1400); }
+      catch (_) {                                       // sem permissão para copiar: mostra o endereço já selecionado
+        const m = $('l-msg'); m.textContent = l.url;
+        const r = document.createRange(); r.selectNodeContents(m);
+        const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      }
+    };
+    const rm = document.createElement('button'); rm.className = 'mini danger'; rm.textContent = '×'; rm.setAttribute('aria-label', 'Remover ' + l.title);
+    rm.onclick = () => { links = links.filter(x => x.id !== l.id); renderLinks(); saveLinks(); };
+    li.append(a, cp, rm); ul.appendChild(li);
+  });
+}
+$('l-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const url = normUrl($('l-url').value);
+  const msg = $('l-msg');
+  if (!url) { msg.textContent = 'Endereço inválido. Exemplo: https://site.com.br'; return; }
+  msg.textContent = '';
+  links.push({ id: uid(), title: $('l-title').value.trim().slice(0, 60) || hostOf(url), url });
+  $('l-title').value = ''; $('l-url').value = '';
+  renderLinks(); saveLinks();
+});
+
+/* ---- importar e exportar a base ----
+   A base é um arquivo JSON com as caixas, o texto das páginas e os links.
+   Você pode importar a de um colega somando à sua ou substituindo a sua. */
+let pendingBase = null, replaceArmed = false;
+const iSum = (t, bad) => { const s = $('i-sum'); s.textContent = t; s.classList.toggle('bad', !!bad); };
+function analyzeImport() {
+  const txt = $('i-text').value.trim();
+  pendingBase = null; $('i-go').disabled = true;
+  if (!txt) { iSum(''); return; }
+  try {
+    const raw = JSON.parse(txt);
+    const list = cleanList(raw.nodes) || [];
+    const lk = cleanLinks(raw.links) || [];
+    if (!list.length && !lk.length) throw new Error('vazio');
+    const pg = list.filter(n => raw.pages && typeof raw.pages[n.id] === 'string').length;
+    pendingBase = { raw, list, lk };
+    iSum(`Encontrei ${list.length} caixa(s), ${pg} página(s) com conteúdo e ${lk.length} link(s).`);
+    $('i-go').disabled = false;
+  } catch (_) { iSum('Não consegui ler. Use um JSON exportado por esta ferramenta.', true); }
+}
+function applyImport(base, mode) {
+  const { raw, list, lk } = base;
+  if (mode === 'replace') { nodes.forEach(n => deletePageData(n.id)); nodes = []; }
+  const map = {}; list.forEach(n => { map[n.id] = mode === 'replace' ? n.id : uid(); });   // ao somar, ids novos para não colidir
+  list.forEach(n => {
+    const nid = map[n.id];
+    const html = raw.pages && typeof raw.pages[n.id] === 'string' ? sanitize(raw.pages[n.id]) : null;
+    if (html) { const obj = { html, t: Date.now() }; writePageLocal(nid, obj); writePageDb(nid, obj); }
+    nodes.push({ ...n, id: nid, parent: n.parent && map[n.parent] ? map[n.parent] : null, pg: !!html });
+  });
+  if (lk.length) {
+    if (mode === 'replace') links = lk;
+    else { const have = new Set(links.map(l => l.url)); lk.forEach(l => { if (!have.has(l.url)) links.push({ ...l, id: uid() }); }); }
+    renderLinks(); saveLinks();
+  }
+  reindex(); dirty = true;
+  select(null); fit();
+  if (tab === 'tree') { gKnown = null; renderGarden(); gfit(); }
+  save();
+  iSum(`Pronto: ${list.length} caixa(s) importada(s).`);
+  $('i-text').value = ''; pendingBase = null; $('i-go').disabled = true;
+}
+$('i-pick').onclick = () => $('i-file').click();
+$('i-file').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  $('i-name').textContent = f.name;
+  try { $('i-text').value = await f.text(); } catch (_) { iSum('Não consegui abrir o arquivo.', true); return; }
+  analyzeImport();
+});
+let aTimer = null;
+$('i-text').addEventListener('input', () => { clearTimeout(aTimer); aTimer = setTimeout(analyzeImport, 300); });
+$('i-go').onclick = function () {
+  if (!pendingBase) return;
+  const mode = document.querySelector('input[name="imode"]:checked').value;
+  if (mode === 'replace' && !replaceArmed) {            // substituir apaga a sua base: pede confirmação
+    replaceArmed = true; this.textContent = 'Confirmar: substituir tudo';
+    setTimeout(() => { replaceArmed = false; this.textContent = 'Importar'; }, 4000);
+    return;
+  }
+  replaceArmed = false; this.textContent = 'Importar';
+  applyImport(pendingBase, mode);
+};
+
+async function buildExport() {
+  const pages = {};
+  for (const n of nodes) if (n.pg) { const p = await getPage(n.id); if (p) pages[n.id] = p.html; }
+  return JSON.stringify({ app: 'arvore-de-ideias', version: 2, nodes: nodes.map(strip), pages, links }, null, 2);
+}
+$('b-export').onclick = async () => {
+  if (!dlNS) return;
+  try {
+    await dlNS.save({ filename: 'arvore-de-ideias.json', data: await buildExport() });
+    iSum('Arquivo exportado.');
+  } catch (err) { if (err && err.code !== 'declined') iSum('Não foi possível exportar.', true); }
+};
+$('b-copy').onclick = async () => {
+  const json = await buildExport();
+  try { await navigator.clipboard.writeText(json); iSum('JSON copiado. Cole no chat ou num arquivo e envie ao colega.'); }
+  catch (_) {                                            // sem permissão para copiar: deixa o texto na caixa, já selecionado
+    const t = $('i-text'); t.value = json; t.focus(); t.select();
+    iSum('Copie o texto da caixa com Ctrl+C. Não clique em Importar com ele.');
+  }
+};
+
+function initSidebar() {
+  links = readLinksLocal() || sampleLinks();
+  renderLinks();
+  $('menu-btn').setAttribute('aria-expanded', String(sideIsOpen()));
+  initUser();
+}
+
+/* =========================================================
+   12) GALERIA
+   Uma estante de livros. Cada livro é { id, title, tone, pages: [texto, ...] }.
+   O livro aberto mostra duas páginas (uma no celular). Quando o texto passa do fim
+   da página, o que sobrou vai para a próxima e, se ela estiver em outra folha, a folha vira.
+   Fica salvo neste navegador (chave "arvore-de-ideias-v1:books").
+   ========================================================= */
+const BK = KEY + ':books', MAXPG = 400;
+const gal = $('gallery'), reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let books = [], bookId = null, cur = 0, flipping = false, bkTimer = null, bkDelArmed = false;
+function readBooks() {
+  try { const r = JSON.parse(localStorage.getItem(BK)); return Array.isArray(r) ? r.filter(b => b && typeof b.id === 'string' && Array.isArray(b.pages) && b.pages.length) : []; } catch (_) { return []; }
+}
+const trimPages = (p) => { const c = p.slice(); while (c.length > 1 && !c[c.length - 1]) c.pop(); return c; };
+function saveBooks() { $('bk-status').textContent = 'Salvando…'; clearTimeout(bkTimer); bkTimer = setTimeout(flushBooks, 500); }
+function flushBooks() {
+  clearTimeout(bkTimer);
+  try { localStorage.setItem(BK, JSON.stringify(books.map(b => ({ ...b, pages: trimPages(b.pages) })))); $('bk-status').textContent = 'Salvo neste navegador'; pubShelfSync(); }
+  catch (_) { $('bk-status').textContent = 'Não foi possível salvar'; }
+}
+const curBook = () => books.find(b => b.id === bookId);
+const two = () => innerWidth >= 760;
+const startOf = (i) => two() ? i & ~1 : i;
+const txt = (i) => curBook().pages[i] || '';
+const hashOf = (s) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 0) >>> 0;
+const pagesLabel = (b) => { const n = trimPages(b.pages); return n.length === 1 && !n[0] ? 'em branco' : n.length + (n.length > 1 ? ' páginas' : ' página'); };
+const lastFilled = (b) => { for (let i = b.pages.length - 1; i > 0; i--) if (b.pages[i]) return i; return 0; };
+
+/* ---- lista no menu lateral e estante ---- */
+function renderGalList() {
+  const ul = $('g-list'); ul.textContent = '';
+  books.forEach(b => {
+    const li = document.createElement('li'), bt = document.createElement('button'), s = document.createElement('strong'), p = document.createElement('span');
+    bt.className = 'gl-item'; s.textContent = b.title || 'Livro sem título'; p.textContent = pagesLabel(b);
+    bt.append(s, p); bt.onclick = () => { openGallery(); openBook(b.id); };
+    li.appendChild(bt); ul.appendChild(li);
+  });
+  $('g-empty').hidden = books.length > 0;
+}
+function coverEl(b) {
+  const e = document.createElement('button'), t = document.createElement('strong'), n = document.createElement('span');
+  e.className = 'bk t' + b.tone; e.style.setProperty('--h', 160 + hashOf(b.id) % 7 * 5 + 'px');
+  t.textContent = b.title || 'Livro sem título'; n.textContent = pagesLabel(b);
+  e.append(t, n); e.onclick = () => openBook(b.id); return e;
+}
+function newEl() {
+  const e = document.createElement('button');
+  e.className = 'bk new'; e.innerHTML = '<span class="plus" aria-hidden="true">+</span><strong>Novo livro</strong>';
+  e.onclick = () => {
+    const b = { id: uid(), title: '', tone: books.length % 5, pages: [''] };
+    books.push(b); saveBooks(); renderGalList(); openBook(b.id);
+  };
+  return e;
+}
+function renderShelf() {
+  const box = $('shelves'); box.textContent = '';
+  const per = Math.max(1, Math.floor(((box.clientWidth || 320) - 14) / 126));
+  const items = [null, ...books], rows = Math.max(2, Math.ceil(items.length / per));
+  for (let r = 0; r < rows; r++) {
+    const shelf = document.createElement('div'), row = document.createElement('div'), plank = document.createElement('div');
+    shelf.className = 'shelf'; row.className = 'shelf-books'; plank.className = 'plank';
+    items.slice(r * per, (r + 1) * per).forEach(b => row.appendChild(b ? coverEl(b) : newEl()));
+    shelf.append(row, plank); box.appendChild(shelf);
+  }
+  $('gs-empty').hidden = books.length > 0;
+}
+
+/* ---- abrir e fechar ---- */
+function showShelf() {
+  bookId = null; flipping = false;
+  $('reader').hidden = true; $('shelfview').hidden = false;
+  $('g-heading').hidden = false; $('bk-title').hidden = true; $('bk-del').hidden = true;
+  $('g-back').textContent = '← Voltar à árvore'; $('bk-status').textContent = '';
+  renderShelf();
+}
+function openGallery() {
+  if (openId) { flushPage(); leavePage(); }
+  document.body.classList.add('in-gallery'); gal.hidden = false;
+  if (mq.matches) setSide(false);
+  showShelf();
+}
+function closeGallery() {
+  if (bookId) { flushBooks(); }
+  bookId = null; gal.hidden = true; document.body.classList.remove('in-gallery');
+  renderGalList();
+  requestAnimationFrame(() => { if (tab === 'tree') { if (!gv.touched) gfit(); } else if (!sel) fit(); });
+}
+function openBook(id) {
+  const b = books.find(x => x.id === id); if (!b) return;
+  bookId = id; cur = 0; flipping = false;
+  $('shelfview').hidden = true; $('reader').hidden = false;
+  $('g-heading').hidden = true; $('bk-title').hidden = false; $('bk-del').hidden = false; $('bk-title').value = b.title;
+  $('g-back').textContent = '← Estante'; $('bk-status').textContent = '';
+  const w = $('bookwrap'); w.classList.remove('opening'); void w.offsetWidth; w.classList.add('opening');
+  renderSpread(); relayout();
+  cur = startOf(lastFilled(b)); renderSpread();
+  if (!matchMedia('(pointer: coarse)').matches) focusPage(lastFilled(b), (b.pages[lastFilled(b)] || '').length);
+}
+function closeBook() { flushBooks(); showShelf(); renderGalList(); }
+
+/* ---- desenho da folha aberta ---- */
+function setTa(ta, i) { const v = txt(i); if (ta.value !== v) ta.value = v; ta.dataset.i = i; ta.setAttribute('aria-label', 'Página ' + (i + 1)); }
+function renderSpread() {
+  const b = curBook(); if (!b) return;
+  if (cur > b.pages.length - 1) cur = b.pages.length - 1;
+  cur = Math.max(0, startOf(cur));
+  $('openbook').className = 'open-book t' + b.tone + (two() ? '' : ' single');
+  $('half-r').hidden = !two();
+  setTa($('pg-l'), cur); setTa($('pg-r'), cur + 1);
+  $('no-l').textContent = cur + 1; $('no-r').textContent = cur + 2;
+  $('pg-l').placeholder = cur === 0 && b.pages.length === 1 && !b.pages[0] ? 'Comece a escrever. Quando a página encher, ela vira sozinha.' : '';
+  updateNav();
+}
+function updateNav() {
+  const b = curBook(), step = two() ? 2 : 1, n = b.pages.length, end = Math.min(cur + step, Math.max(n, cur + 1));
+  $('g-prev').disabled = cur <= 0; $('g-next').disabled = cur + step > n - 1;
+  $('g-pos').textContent = (end > cur + 1 ? `Páginas ${cur + 1}–${end}` : `Página ${cur + 1}`) + ` de ${n}`;
+}
+function focusPage(i, pos) {
+  const ta = $(i === cur ? 'pg-l' : 'pg-r'); ta.focus({ preventScroll: true }); ta.setSelectionRange(pos, pos);
+}
+
+/* ---- quebra do texto em páginas (mede com uma caixa invisível do mesmo tamanho) ---- */
+function syncMeasure() {
+  const t = $('pg-l'), m = $('pg-m'); m.style.width = t.clientWidth + 'px'; m.style.height = t.clientHeight + 'px';
+  return t.clientWidth > 40 && t.clientHeight > 60;
+}
+function splitText(text) {
+  const m = $('pg-m');
+  if (m.clientHeight < 60) return [text, ''];
+  let lo = 0, hi = Math.min(text.length, 6000);
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; m.value = text.slice(0, mid); if (m.scrollHeight <= m.clientHeight + 1) lo = mid; else hi = mid - 1; }
+  if (lo >= text.length) return [text, ''];
+  let c = lo; const head = text.slice(0, lo), ws = Math.max(head.lastIndexOf(' '), head.lastIndexOf('\n'));
+  if (ws > lo * 0.6) c = ws + 1;
+  if (c < 1) c = 1;
+  return [text.slice(0, c), text.slice(c)];
+}
+function reflow(pages, from, focusPage, caret) {          // devolve onde o cursor foi parar
+  let moved = false, page = focusPage, pos = caret;
+  for (let p = from; p < pages.length && p < MAXPG; p++) {
+    const [keep, rest] = splitText(pages[p]);
+    if (!rest) break;
+    moved = true;
+    let carry = rest, strip = 0; if (carry[0] === ' ') { carry = carry.slice(1); strip = 1; }
+    pages[p] = keep;
+    let went = false;
+    if (page === p && pos > keep.length) { page = p + 1; pos = Math.max(0, pos - keep.length - strip); went = true; }
+    if (p + 1 >= pages.length) pages.push(carry);
+    else { pages[p + 1] = carry + pages[p + 1]; if (page === p + 1 && !went) pos += carry.length; }
+  }
+  return { moved, page, pos };
+}
+function relayout() {                                     // tamanho da tela mudou: refaz a quebra
+  const b = curBook(); if (!b || gal.hidden || !syncMeasure()) return;
+  let moved = false;
+  for (let p = 0; p < b.pages.length && p < MAXPG; p++) if (reflow(b.pages, p, -1, 0).moved) moved = true;
+  renderSpread(); if (moved) saveBooks();
+}
+
+/* ---- virar a folha ---- */
+function ro(v) { $('pg-l').readOnly = v; $('pg-r').readOnly = v; }
+function face(cls, i) {
+  const f = document.createElement('div'), t = document.createElement('div'), n = document.createElement('span');
+  f.className = 'face half ' + cls; t.className = 'ftxt'; t.textContent = txt(i); n.className = 'pgno'; n.textContent = i + 1;
+  f.append(t, n); return f;
+}
+function flipTo(start, after) {
+  if (flipping) return;
+  if (reduceMotion.matches) { cur = start; renderSpread(); if (after) after(); return; }
+  const dir = start > cur ? 1 : -1, old = cur, sp = two();
+  flipping = true; ro(true);
+  const leaf = document.createElement('div');
+  leaf.className = 'leaf ' + (dir > 0 ? 'fwd' : 'bwd') + (sp ? '' : ' single');
+  if (!sp) { leaf.appendChild(face('l front', old)); setTa($('pg-l'), start); $('no-l').textContent = start + 1; }
+  else if (dir > 0) { leaf.append(face('r front', old + 1), face('l back', start)); setTa($('pg-r'), start + 1); $('no-r').textContent = start + 2; }
+  else { leaf.append(face('l front', old), face('r back', start + 1)); setTa($('pg-l'), start); $('no-l').textContent = start + 1; }
+  $('openbook').appendChild(leaf); void leaf.offsetWidth;
+  requestAnimationFrame(() => leaf.classList.add('go'));
+  let done = false;
+  const end = () => {
+    if (done) return; done = true;
+    leaf.remove(); cur = start; flipping = false; ro(false); renderSpread(); if (after) after();
+  };
+  leaf.addEventListener('transitionend', e => { if (e.target === leaf && e.propertyName === 'transform') end(); });
+  setTimeout(end, 1100);
+}
+function goTo(page, pos) {                                // vai para uma página (virando a folha se preciso) e põe o cursor
+  const s = startOf(page), after = () => focusPage(page, pos);
+  if (s === cur) { renderSpread(); after(); } else flipTo(s, after);
+}
+
+/* ---- escrita ---- */
+function onPgInput(e) {
+  if (e.isComposing || flipping) return;
+  const ta = e.target, i = +ta.dataset.i, b = curBook();
+  b.pages[i] = ta.value; saveBooks();
+  if (!syncMeasure()) return;
+  const r = reflow(b.pages, i, i, ta.selectionStart);
+  if (r.moved) goTo(r.page, r.pos); else updateNav();
+}
+function onPgKey(e) {
+  if (flipping) { e.preventDefault(); return; }
+  const ta = e.target, i = +ta.dataset.i, b = curBook(), c = ta.selectionStart === ta.selectionEnd;
+  if (e.isComposing || !c) return;
+  if (ta.selectionStart === 0 && i > 0 && (e.key === 'Backspace' || e.key === 'ArrowLeft')) {
+    e.preventDefault();
+    if (e.key === 'Backspace' && !b.pages[i] && i === b.pages.length - 1) { b.pages.pop(); saveBooks(); }
+    goTo(i - 1, (b.pages[i - 1] || '').length);
+  } else if (e.key === 'ArrowRight' && ta.selectionStart === ta.value.length && b.pages[i + 1]) {
+    e.preventDefault(); goTo(i + 1, 0);
+  }
+}
+function onPgFocus(e) {                                   // não deixa escrever numa página depois de um buraco
+  const b = curBook(), i = +e.target.dataset.i, last = b.pages.length - 1;
+  if (i > last) focusPage(last, (b.pages[last] || '').length);
+}
+['pg-l', 'pg-r'].forEach(id => {
+  const ta = $(id);
+  ta.addEventListener('input', onPgInput); ta.addEventListener('keydown', onPgKey); ta.addEventListener('focus', onPgFocus);
+  ta.addEventListener('compositionend', () => ta.dispatchEvent(new Event('input')));
+});
+$('g-next').onclick = () => { const s = cur + (two() ? 2 : 1); if (!flipping && s < curBook().pages.length) flipTo(s); };
+$('g-prev').onclick = () => { const s = cur - (two() ? 2 : 1); if (!flipping && s >= 0) flipTo(s); };
+$('bk-title').addEventListener('input', e => { const b = curBook(); if (b) { b.title = e.target.value; saveBooks(); } });
+$('bk-del').onclick = function () {
+  if (!bkDelArmed) {
+    bkDelArmed = true; this.classList.add('armed'); this.textContent = 'Confirmar: excluir livro';
+    setTimeout(() => { bkDelArmed = false; this.classList.remove('armed'); this.textContent = 'Excluir livro'; }, 4000);
+    return;
+  }
+  bkDelArmed = false; this.classList.remove('armed'); this.textContent = 'Excluir livro';
+  books = books.filter(b => b.id !== bookId); closeBook();
+};
+$('g-back').onclick = () => { if (bookId) closeBook(); else closeGallery(); };
+$('g-open').onclick = openGallery;
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !gal.hidden) { e.preventDefault(); if (bookId) closeBook(); else closeGallery(); } });
+let galTimer = null;
+window.addEventListener('resize', () => { clearTimeout(galTimer); galTimer = setTimeout(() => { if (gal.hidden) return; if (bookId) relayout(); else renderShelf(); }, 150); });
+books = readBooks(); renderGalList();
+
+/* =========================================================
+   13) PUBLICAÇÕES
+   Três coleções no banco, todas legíveis pelo grupo e graváveis só pelo dono do documento:
+   pub/<id>   { posts: [{ id, t, title, cap, body }] }   as anotações publicadas
+   shelf/<id> { books: [...] }                            a galeria que a pessoa mostra no perfil
+   votes/<id> { g: { "<autor>_<post>": "C"|"B"|"A"|"S+" } }  as avaliações dadas por essa pessoa
+   Grupo = quem já abriu Publicações (tem documento em pub/). Nota de uma anotação:
+   média das avaliações do grupo, em que quem não avaliou conta como C, arredondada para cima.
+   Quem avalia não pode baixar a própria avaliação, então a nota não cai.
+   ========================================================= */
+const RK = ['C', 'B', 'A', 'S+'], pb = $('pub');
+let pubDocs = {}, voteDocs = {}, shelfDocs = {}, profs = {}, pubOn = false, profId = null, profTab = 'n', pUser = null, shelfTimer = null;
+const h = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+const nameOf = (id) => (profs[id] && profs[id].name) || 'Alguém';
+const pbStatus = (t) => { $('pb-status').textContent = t; };
+const shareOn = () => { try { return localStorage.getItem(KEY + ':share') !== '0'; } catch (_) { return true; } };
+function pubShelfSync() {
+  if (!rawDb || !myId) return;
+  clearTimeout(shelfTimer);
+  shelfTimer = setTimeout(() => {
+    const data = { books: shareOn() ? books.map(b => ({ id: b.id, title: b.title, tone: b.tone, pages: trimPages(b.pages) })) : [] };
+    rawDb.doc('shelf/' + myId).set(data).catch(() => {});
+  }, 1500);
+}
+function rankOf(aid, pid) {
+  const key = aid + '_' + pid, N = Object.keys(pubDocs).filter(i => i !== aid).length;
+  let v = 0, sum = 0;
+  Object.keys(voteDocs).forEach(u => {
+    if (u === aid || !pubDocs[u]) return;
+    const k = RK.indexOf(voteDocs[u].g && voteDocs[u].g[key]);
+    if (k >= 0) { v++; sum += k + 1; }
+  });
+  if (!N) return { i: 0, v: 0, N: 0 };
+  return { i: Math.min(3, Math.max(0, Math.ceil((sum + (N - v)) / N) - 1)), v, N };
+}
+function avatar(id, big) {
+  const a = h('span', 'pav' + (big ? ' big' : ''), nameOf(id).slice(0, 1).toUpperCase());
+  a.style.background = (profs[id] && profs[id].color) || 'var(--accent)'; a.setAttribute('aria-hidden', 'true'); return a;
+}
+async function vote(aid, pid, g) {
+  const key = aid + '_' + pid, ref = rawDb.doc('votes/' + myId);
+  try {
+    const s = await ref.get(), cur = (s.exists && s.data().g) || {};
+    if (cur[key] && RK.indexOf(cur[key]) >= RK.indexOf(g)) return;
+    await ref.set({ g: { ...cur, [key]: g } });
+  } catch (_) { pbStatus('Não foi possível avaliar'); }
+}
+async function delPost(pid) {
+  const ref = rawDb.doc('pub/' + myId);
+  try { const s = await ref.get(); await ref.set({ posts: ((s.exists && s.data().posts) || []).filter(p => p.id !== pid) }); }
+  catch (_) { pbStatus('Não foi possível excluir'); }
+}
+function postCard(p) {
+  const c = h('article', 'pcard'), hd = h('div', 'phead'), who = h('div'), nm = h('button', 'pwho', nameOf(p.a)), r = rankOf(p.a, p.id);
+  nm.onclick = () => { profId = p.a; profTab = 'n'; renderPub(); $('pbody-top') };
+  who.append(nm, h('span', 'pdate', new Date(p.t).toLocaleDateString('pt-BR')));
+  const av = avatar(p.a); av.style.cursor = 'pointer'; av.onclick = nm.onclick;
+  hd.append(av, who, h('span', 'rk r' + r.i, 'Nota ' + RK[r.i])); c.appendChild(hd);
+  c.appendChild(h('h3', '', p.title));
+  if (p.cap) c.appendChild(h('p', '', p.cap));
+  if (p.body) c.appendChild(h('div', 'pbodytxt', p.body));
+  const ft = h('div', 'pfoot'); ft.appendChild(h('span', 'muted', r.N ? `${r.v} de ${r.N} avaliaram` : 'Ainda sem grupo para avaliar'));
+  if (p.a === myId) {
+    const d = h('button', 'btn danger', 'Excluir'); let armed = false;
+    d.onclick = () => { if (!armed) { armed = true; d.textContent = 'Confirmar'; setTimeout(() => { armed = false; d.textContent = 'Excluir'; }, 3000); return; } delPost(p.id); };
+    ft.appendChild(d);
+  } else {
+    const mine = voteDocs[myId] && voteDocs[myId].g && voteDocs[myId].g[p.a + '_' + p.id], mi = RK.indexOf(mine);
+    ft.appendChild(h('span', 'muted', 'Está certo? Sua nota:'));
+    RK.forEach((g, i) => {
+      const b = h('button', 'vb', g); b.setAttribute('aria-pressed', String(i === mi)); b.disabled = i <= mi && i !== mi ? true : false;
+      if (i < mi) b.disabled = true; b.onclick = () => vote(p.a, p.id, g); ft.appendChild(b);
+    });
+  }
+  c.appendChild(ft); return c;
+}
+function renderPub() {
+  const feed = $('pb-feed'); feed.textContent = '';
+  $('pb-comp').hidden = !!profId; $('pb-head').textContent = profId ? nameOf(profId) : 'Publicações';
+  $('pb-back').textContent = profId ? '← Feed' : '← Voltar à árvore';
+  if (!rawDb || !myId) { feed.appendChild(h('p', 'muted', 'Publicações precisam da página publicada e de uma conta com acesso ao grupo.')); $('pb-comp').hidden = true; return; }
+  const all = [];
+  Object.keys(pubDocs).forEach(a => (pubDocs[a].posts || []).forEach(p => all.push({ ...p, a })));
+  all.sort((x, y) => y.t - x.t);
+  if (!profId) {
+    if (!all.length) feed.appendChild(h('p', 'muted', 'Nenhuma publicação ainda. Escolha uma anotação acima e publique a primeira.'));
+    all.forEach(p => feed.appendChild(postCard(p))); return;
+  }
+  const mine = all.filter(p => p.a === profId), best = mine.reduce((m, p) => Math.max(m, rankOf(p.a, p.id).i), 0);
+  const top = h('div', 'prof'), info = h('div');
+  info.append(h('h2', '', nameOf(profId) + (profId === myId ? ' (você)' : '')), h('span', 'muted', `${mine.length} anotação(ões) · melhor nota ${mine.length ? RK[best] : '—'}`));
+  top.append(avatar(profId, true), info); feed.appendChild(top);
+  const tabs = h('div', 'ptabs');
+  [['n', 'Anotações'], ['g', 'Galeria']].forEach(([k, t]) => { const b = h('button', '', t); b.setAttribute('aria-pressed', String(profTab === k)); b.onclick = () => { profTab = k; renderPub(); }; tabs.appendChild(b); });
+  feed.appendChild(tabs);
+  if (profTab === 'n') { if (!mine.length) feed.appendChild(h('p', 'muted', 'Nenhuma anotação publicada.')); mine.forEach(p => feed.appendChild(postCard(p))); return; }
+  if (profId === myId) {
+    const l = h('label', 'row'), cb = h('input'); cb.type = 'checkbox'; cb.checked = shareOn();
+    cb.onchange = () => { try { localStorage.setItem(KEY + ':share', cb.checked ? '1' : '0'); } catch (_) {} pubShelfSync(); };
+    l.append(cb, h('span', '', 'Mostrar minha galeria para o grupo')); feed.appendChild(l);
+  }
+  const bs = (shelfDocs[profId] && shelfDocs[profId].books) || [];
+  if (!bs.length) feed.appendChild(h('p', 'muted', 'Nenhum livro na galeria.'));
+  bs.forEach(b => {
+    const d = h('details', 'pcard t' + (b.tone || 0)), n = (b.pages || []).filter(Boolean).length;
+    d.appendChild(h('summary', '', (b.title || 'Livro sem título') + ' · ' + (n ? n + ' página(s)' : 'em branco')));
+    d.appendChild(h('div', 'pbodytxt', (b.pages || []).join('\n\n— — —\n\n'))); feed.appendChild(d);
+  });
+}
+async function loadProfs() {
+  try { if (pUser) profs = await pUser.profiles(Object.keys(pubDocs).concat(Object.keys(voteDocs))); } catch (_) {}
+}
+async function startPub() {
+  if (!rawDb || !myId) return;
+  pubOn = true;
+  try { pUser = await window.claude.use('user'); } catch (_) {}
+  try { const s = await rawDb.doc('pub/' + myId).get(); if (!s.exists) await rawDb.doc('pub/' + myId).set({ posts: [] }); }
+  catch (_) { pbStatus('Sem permissão para publicar'); }
+  const sub = (path, set) => rawDb.collection(path).onSnapshot(async snap => {
+    const o = {}; snap.docs.forEach(d => { o[d.id] = d.data() || {}; }); set(o); await loadProfs(); if (!pb.hidden) renderPub();
+  }, () => pbStatus('Sem permissão para ler o grupo'));
+  sub('pub', o => { pubDocs = o; }); sub('votes', o => { voteDocs = o; }); sub('shelf', o => { shelfDocs = o; });
+  pubShelfSync();
+}
+async function openPub() {
+  if (openId) { flushPage(); leavePage(); }
+  document.body.classList.add('in-pub'); pb.hidden = false; if (mq.matches) setSide(false);
+  profId = null; pbStatus('');
+  const sel = $('pb-sel'); sel.textContent = '';
+  nodes.forEach(n => { const o = h('option', '', n.title || 'Sem título'); o.value = n.id; sel.appendChild(o); });
+  $('pb-go').disabled = !nodes.length;
+  renderPub();
+  if (!pubOn) { await startPub(); renderPub(); }
+}
+function closePub() {
+  if (profId) { profId = null; renderPub(); return; }
+  pb.hidden = true; document.body.classList.remove('in-pub');
+  requestAnimationFrame(() => { if (tab === 'tree') { if (!gv.touched) gfit(); } else if (!sel) fit(); });
+}
+$('pb-open').onclick = openPub; $('pb-back').onclick = closePub;
+$('pb-go').onclick = async () => {
+  const id = $('pb-sel').value, n = byId[id]; if (!n || !rawDb || !myId) return;
+  let body = '';
+  try { const p = await getPage(id); if (p) body = new DOMParser().parseFromString(p.html, 'text/html').body.textContent.trim(); } catch (_) {}
+  if (!body) body = n.note || '';
+  const post = { id: uid(), t: Date.now(), title: n.title || 'Sem título', cap: $('pb-cap').value.slice(0, 200), body: body.slice(0, 1500) };
+  const ref = rawDb.doc('pub/' + myId);
+  try { const s = await ref.get(); await ref.set({ posts: [post, ...((s.exists && s.data().posts) || [])].slice(0, 40) }); $('pb-cap').value = ''; pbStatus('Publicado'); }
+  catch (_) { pbStatus('Não foi possível publicar'); }
+};
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pb.hidden) { e.preventDefault(); closePub(); } });
+
+/* =========================================================
+   14) PERSONALIZAÇÃO (fica só neste navegador)
+   ========================================================= */
+const TH = KEY + ':theme';
+let th = { bg: '', dim: 35, blur: 0, po: 92, accent: '', side: 'l' };
+try { Object.assign(th, JSON.parse(localStorage.getItem(TH)) || {}); } catch (_) {}
+const tMsg = (t) => { $('t-msg').textContent = t; };
+function saveTheme() {
+  try { localStorage.setItem(TH, JSON.stringify(th)); tMsg(''); return true; }
+  catch (_) { th.bg = ''; tMsg('A foto é grande demais para guardar neste navegador. Tente uma menor.'); return false; }
+}
+function applyTheme() {
+  const root = document.documentElement, bd = document.body, fx = $('bgfx');
+  fx.style.backgroundImage = th.bg ? `url(${th.bg})` : 'none'; fx.style.filter = `blur(${th.blur}px)`; fx.style.setProperty('--dim', th.dim / 100);
+  bd.classList.toggle('has-bg', !!th.bg); bd.classList.toggle('side-right', th.side === 'r');
+  bd.style.removeProperty('--panel');
+  if (th.bg) bd.style.setProperty('--panel', `color-mix(in srgb, ${getComputedStyle(bd).getPropertyValue('--panel').trim()} ${th.po}%, transparent)`);
+  if (th.accent) {
+    const n = parseInt(th.accent.slice(1), 16), l = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+    root.style.setProperty('--accent', th.accent); root.style.setProperty('--accent-ink', l > 0.6 ? '#111111' : '#ffffff');
+  } else { root.style.removeProperty('--accent'); root.style.removeProperty('--accent-ink'); }
+}
+function syncThemeUi() {
+  $('t-dim').value = th.dim; $('t-blur').value = th.blur; $('t-po').value = th.po; $('t-side').value = th.side;
+  $('t-acc').value = th.accent || '#0b7a75';
+}
+async function loadBg(f) {
+  try {
+    const url = URL.createObjectURL(f), im = new Image(); im.src = url; await im.decode();
+    const k = Math.min(1, 1920 / im.naturalWidth, 1080 / im.naturalHeight), c = document.createElement('canvas');
+    c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
+    c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+    th.bg = c.toDataURL('image/jpeg', 0.85); saveTheme(); applyTheme();
+  } catch (_) { tMsg('Não consegui abrir essa imagem.'); }
+}
+$('t-pick').onclick = () => $('t-file').click();
+$('t-file').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) loadBg(f); });
+$('t-clear').onclick = () => { th.bg = ''; saveTheme(); applyTheme(); };
+[['t-dim', 'dim'], ['t-blur', 'blur'], ['t-po', 'po']].forEach(([id, k]) => $(id).addEventListener('input', e => { th[k] = +e.target.value; applyTheme(); saveTheme(); }));
+$('t-acc').addEventListener('input', e => { th.accent = e.target.value; applyTheme(); saveTheme(); });
+$('t-side').addEventListener('change', e => { th.side = e.target.value; applyTheme(); saveTheme(); });
+$('t-reset').onclick = () => { th = { bg: '', dim: 35, blur: 0, po: 92, accent: '', side: 'l' }; saveTheme(); applyTheme(); syncThemeUi(); };
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+applyTheme(); syncThemeUi();
+
+/* =========================================================
+   9) INÍCIO
+   ========================================================= */
+nodes = readLocal() || sample();
+reindex();
+render();
+requestAnimationFrame(() => { fit(); });
+window.addEventListener('resize', () => { if (openId) return; if (tab === 'tree') { if (!gv.touched) gfit(); } else if (!sel) fit(); });
+initSidebar();
+initStorage();
+initDownloads();
+</script>
+
+</body></html>
